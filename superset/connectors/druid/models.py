@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import json
 import logging
 from multiprocessing.pool import ThreadPool
+import re
 
 from dateutil.parser import parse as dparse
 from flask import escape, Markup
@@ -37,6 +38,7 @@ from superset.utils import (
 
 DRUID_TZ = conf.get('DRUID_TZ')
 
+import os
 
 # Function wrapper because bound methods cannot
 # be passed to processes
@@ -130,7 +132,13 @@ class DruidCluster(Model, AuditMixinNullable, ImportMixin):
         If ``datasource_name`` is specified, only that datasource is updated
         """
         self.druid_version = self.get_druid_version()
-        ds_list = self.get_datasources()
+        # ds_list = self.get_datasources()
+        ds_list_tmp = self.get_datasources()
+        ds_list = []
+        for ds in ds_list_tmp:
+            if re.match(".*_view$", ds) is None:
+                ds_list.append(ds)
+        # print(ds_list)
         blacklist = conf.get('DRUID_DATA_SOURCE_BLACKLIST', [])
         ds_refresh = []
         if not datasource_name:
@@ -139,6 +147,7 @@ class DruidCluster(Model, AuditMixinNullable, ImportMixin):
             ds_refresh.append(datasource_name)
         else:
             return
+
         self.refresh(ds_refresh, merge_flag, refreshAll)
 
     def refresh(self, datasource_names, merge_flag, refreshAll):
@@ -204,7 +213,7 @@ class DruidCluster(Model, AuditMixinNullable, ImportMixin):
                     if datatype == 'STRING':
                         col_obj.groupby = True
                         col_obj.filterable = True
-                    if datatype == 'hyperUnique' or datatype == 'thetaSketch':
+                    if datatype == 'hyperUnique' or datatype == 'thetaSketch' or datatype == 'HLLSketch':
                         col_obj.count_distinct = True
                     # Allow sum/min/max for long or double
                     if datatype == 'LONG' or datatype == 'DOUBLE':
@@ -324,7 +333,8 @@ class DruidColumn(Model, BaseColumn):
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
         if self.count_distinct:
-            name = 'count_distinct__' + self.column_name
+            name = self.column_name
+            #name = 'count_distinct__' + self.column_name
             if self.type == 'hyperUnique' or self.type == 'thetaSketch':
                 metrics[name] = DruidMetric(
                     metric_name=name,
@@ -332,6 +342,17 @@ class DruidColumn(Model, BaseColumn):
                     metric_type=self.type,
                     json=json.dumps({
                         'type': self.type,
+                        'name': name,
+                        'fieldName': self.column_name,
+                    }),
+                )
+            elif self.type == 'HLLSketch':
+                metrics[name] = DruidMetric(
+                    metric_name=name,
+                    verbose_name='COUNT(DISTINCT {})'.format(self.column_name),
+                    metric_type=self.type,
+                    json=json.dumps({
+                        'type': 'HLLSketchMerge',
                         'name': name,
                         'fieldName': self.column_name,
                     }),

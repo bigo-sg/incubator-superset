@@ -448,8 +448,11 @@ class QueryBuilder(object):
         query_type = 'scan'
         valid_parts = [
             'datasource', 'granularity', 'filter', 'dimensions', 'metrics',
-            'intervals', 'limit',
+            'intervals', 'limit', 'columns'
         ]
+        # valid_parts = [
+        #     'datasource', 'granularity', 'filter', 'columns', 'metrics',
+        #     'intervals', 'limit',
+        # ]
         self.validate_query(query_type, valid_parts, args)
-        print(args)
         return self.build_query(query_type, args)

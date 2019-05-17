@@ -1092,7 +1092,6 @@ class DruidDatasource(Model, BaseDatasource):
 
         aggregations = self.get_aggregations(all_metrics)
         self.check_restricted_metrics(aggregations)
-
         # the dimensions list with dimensionSpecs expanded
         dimensions = self.get_dimensions(groupby, columns_dict)
         extras = extras or {}
@@ -1108,7 +1107,6 @@ class DruidDatasource(Model, BaseDatasource):
             post_aggregations=post_aggs,
             intervals=self.intervals_from_dttms(from_dttm, to_dttm),
         )
-
         filters = DruidDatasource.get_filters(filter, self.num_cols)
         if filters:
             qry['filter'] = filters
@@ -1118,11 +1116,11 @@ class DruidDatasource(Model, BaseDatasource):
             qry['having'] = having_filters
 
         order_direction = 'descending' if order_desc else 'ascending'
-
         if columns:
             del qry['post_aggregations']
             del qry['aggregations']
-            qry['dimensions'] = columns
+            # qry['dimensions'] = columns
+            qry['columns'] = columns
             qry['metrics'] = []
             qry['granularity'] = 'all'
             qry['limit'] = row_limit

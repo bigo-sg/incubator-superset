@@ -278,6 +278,12 @@ class DruidColumn(Model, BaseColumn):
 
     def get_metrics(self):
         metrics = {}
+        column_name = self.column_name
+        is_sum = False
+        if re.match(".*_sum$", column_name) is not None:
+            self.column_name = str.replace(column_name, "_sum", "")
+            is_sum = True
+
         metrics['count'] = DruidMetric(
             metric_name='count',
             verbose_name='COUNT(*)',
@@ -301,7 +307,7 @@ class DruidColumn(Model, BaseColumn):
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
 
-        if self.avg and self.is_num:
+        if self.avg and self.is_num and is_sum is False:
             mt = corrected_type.lower() + 'Avg'
             name = 'avg__' + self.column_name
             metrics[name] = DruidMetric(
@@ -312,7 +318,7 @@ class DruidColumn(Model, BaseColumn):
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
 
-        if self.min and self.is_num:
+        if self.min and self.is_num and is_sum is False:
             mt = corrected_type.lower() + 'Min'
             name = 'min__' + self.column_name
             metrics[name] = DruidMetric(
@@ -322,7 +328,7 @@ class DruidColumn(Model, BaseColumn):
                 json=json.dumps({
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
-        if self.max and self.is_num:
+        if self.max and self.is_num and is_sum is False:
             mt = corrected_type.lower() + 'Max'
             name = 'max__' + self.column_name
             metrics[name] = DruidMetric(

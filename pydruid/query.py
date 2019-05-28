@@ -300,7 +300,6 @@ class QueryBuilder(object):
             else:
                 query_dict[key] = val
 
-        print(query_dict)
         if query_type in ["groupBy", "topN", "timeseries"]:
             qd = {}
             qd['queryType'] = 'view'

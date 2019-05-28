@@ -280,36 +280,43 @@ class DruidColumn(Model, BaseColumn):
         metrics = {}
         column_name = self.column_name
         is_sum = False
+        is_cnt = False
+        column_name_new = str.replace(column_name, "_sum", "")
+        column_name_new = str.replace(column_name_new, "_dim", "")
         if re.match(".*_sum$", column_name) is not None:
-            self.column_name = str.replace(column_name, "_sum", "")
             is_sum = True
 
-        metrics['count'] = DruidMetric(
-            metric_name='count',
-            verbose_name='COUNT(*)',
-            metric_type='count',
-            json=json.dumps({'type': 'count', 'name': 'count'}),
-        )
+        if re.match(".*_cnt$", column_name) is not None:
+            is_cnt = True
+            column_name_new = str.replace(column_name, "_cnt", "")
+            name = self.column_name
+            metrics[name] = DruidMetric(
+                metric_name=name,
+                verbose_name='COUNT({})'.format(column_name_new),
+                metric_type='count',
+                json=json.dumps({'type': 'count', 'name': name, 'fieldName': self.column_name}),
+            )
         # Somehow we need to reassign this for UDAFs
         if self.type in ('DOUBLE', 'FLOAT'):
             corrected_type = 'DOUBLE'
         else:
             corrected_type = self.type
 
-        if self.sum and self.is_num:
+        if self.sum and self.is_num and is_cnt is False:
             mt = corrected_type.lower() + 'Sum'
-            name = 'sum__' + self.column_name
+            # name = 'sum_' + column_name_new
+            name = self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
                 metric_type='sum',
-                verbose_name='SUM({})'.format(self.column_name),
+                verbose_name='SUM({})'.format(column_name_new),
                 json=json.dumps({
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
 
-        if self.avg and self.is_num and is_sum is False:
+        if self.avg and self.is_num and is_sum is False and is_cnt is False:
             mt = corrected_type.lower() + 'Avg'
-            name = 'avg__' + self.column_name
+            name = 'avg_' + self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
                 metric_type='avg',
@@ -318,9 +325,9 @@ class DruidColumn(Model, BaseColumn):
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
 
-        if self.min and self.is_num and is_sum is False:
+        if self.min and self.is_num and is_sum is False and is_cnt is False:
             mt = corrected_type.lower() + 'Min'
-            name = 'min__' + self.column_name
+            name = 'min_' + self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
                 metric_type='min',
@@ -328,9 +335,9 @@ class DruidColumn(Model, BaseColumn):
                 json=json.dumps({
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
-        if self.max and self.is_num and is_sum is False:
+        if self.max and self.is_num and is_sum is False and is_cnt is False:
             mt = corrected_type.lower() + 'Max'
-            name = 'max__' + self.column_name
+            name = 'max_' + self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
                 metric_type='max',
@@ -340,7 +347,7 @@ class DruidColumn(Model, BaseColumn):
             )
         if self.count_distinct:
             name = self.column_name
-            #name = 'count_distinct__' + self.column_name
+            # name = 'count_distinct__' + self.column_name
             if self.type == 'hyperUnique' or self.type == 'thetaSketch':
                 metrics[name] = DruidMetric(
                     metric_name=name,
@@ -528,7 +535,7 @@ class DruidDatasource(Model, BaseDatasource):
     @property
     def link(self):
         name = escape(self.datasource_name)
-        return Markup('<a href="{self.url}">{name}</a>').format(**locals())
+        return Markup('<a href="{self.url}">{name}</a>'.format(**locals()))
 
     @property
     def full_name(self):

@@ -281,14 +281,22 @@ class DruidColumn(Model, BaseColumn):
         column_name = self.column_name
         is_sum = False
         is_cnt = False
-        column_name_new = str.replace(column_name, "_sum", "")
-        column_name_new = str.replace(column_name_new, "_dim", "")
+        is_max = False
+        is_min = False
+        column_name_new = self.column_name
+
         if re.match(".*_sum$", column_name) is not None:
             is_sum = True
-
-        if re.match(".*_cnt$", column_name) is not None:
+            column_name_new = column_name[:-4]
+        elif re.match(".*_max$", column_name) is not None:
+            is_max = True
+            column_name_new = column_name[:-4]
+        elif re.match(".*_min$", column_name) is not None:
+            is_min = True
+            column_name_new = column_name[:-4]
+        elif re.match(".*_cnt$", column_name) is not None:
             is_cnt = True
-            column_name_new = str.replace(column_name, "_cnt", "")
+            column_name_new = column_name[:-4]
             name = self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
@@ -296,6 +304,7 @@ class DruidColumn(Model, BaseColumn):
                 metric_type='count',
                 json=json.dumps({'type': 'count', 'name': name, 'fieldName': self.column_name}),
             )
+
         # Somehow we need to reassign this for UDAFs
         if self.type in ('DOUBLE', 'FLOAT'):
             corrected_type = 'DOUBLE'
@@ -325,23 +334,23 @@ class DruidColumn(Model, BaseColumn):
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
 
-        if self.min and self.is_num and is_sum is False and is_cnt is False:
+        if self.min and self.is_num and is_min and is_sum is False and is_cnt is False:
             mt = corrected_type.lower() + 'Min'
-            name = 'min_' + self.column_name
+            # name = 'min_' + self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
                 metric_type='min',
-                verbose_name='MIN({})'.format(self.column_name),
+                verbose_name='MIN({})'.format(column_name_new),
                 json=json.dumps({
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
-        if self.max and self.is_num and is_sum is False and is_cnt is False:
+        if self.max and self.is_num and is_max and is_sum is False and is_cnt is False:
             mt = corrected_type.lower() + 'Max'
-            name = 'max_' + self.column_name
+            # name = 'max_' + self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
                 metric_type='max',
-                verbose_name='MAX({})'.format(self.column_name),
+                verbose_name='MAX({})'.format(column_name_new),
                 json=json.dumps({
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )

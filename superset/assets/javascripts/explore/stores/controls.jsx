@@ -1675,6 +1675,26 @@ export const controls = {
     }),
   },
 
+  filters_initial: {
+    type: 'FilterControl',
+    label: '',
+    default: [],
+    description: '',
+    mapStateToProps: state => ({
+      datasource: state.datasource,
+    }),
+  },
+
+  filters_follow: {
+    type: 'FilterControl',
+    label: '',
+    default: [],
+    description: '',
+    mapStateToProps: state => ({
+      datasource: state.datasource,
+    }),
+  },
+
   annotation_layers: {
     type: 'AnnotationLayerControl',
     label: '',
@@ -1693,6 +1713,12 @@ export const controls = {
         .concat(state.datasource.filterable_cols) : [],
       datasource: state.datasource,
     }),
+  },
+
+  is_retention: {
+    type: 'CheckboxControl',
+    label: t('Is Retention'),
+    default: false,
   },
 
   slice_id: {

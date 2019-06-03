@@ -36,7 +36,7 @@ class BaseDatasource(AuditMixinNullable, ImportMixin):
     description = Column(Text)
     default_endpoint = Column(Text)
     is_featured = Column(Boolean, default=False)  # TODO deprecating
-    filter_select_enabled = Column(Boolean, default=False)
+    filter_select_enabled = Column(Boolean, default=True)
     offset = Column(Integer, default=0)
     cache_timeout = Column(Integer)
     params = Column(String(1000))

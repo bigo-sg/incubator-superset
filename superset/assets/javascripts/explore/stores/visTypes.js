@@ -94,12 +94,14 @@ export const sections = {
             expanded: true,
             description: t('初始行为——用于留存分析'),
             controlSetRows: [['filters_initial']],
+            controlDependence: {'is_retention': true},
         },
         {
             label: t('Filters Follow'),
             expanded: true,
             description: t('后续行为——用于留存分析'),
             controlSetRows: [['filters_follow']],
+            controlDependence: {'is_retention': true},
         }
     ],
 };

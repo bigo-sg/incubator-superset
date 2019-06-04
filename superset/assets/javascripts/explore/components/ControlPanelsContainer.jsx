@@ -49,6 +49,19 @@ class ControlPanelsContainer extends React.Component {
   removeAlert() {
     this.props.actions.removeControlPanelAlert();
   }
+
+  validDependence(section) {
+    let valid = true;
+    if (section.controlDependence) {
+       Object.entries(section.controlDependence).map(([k, v]) => {
+            if (this.props.form_data[k] !== v) {
+              valid = false;
+            }
+       });
+    }
+    return !valid;
+  }
+
   render() {
     const ctrls = this.props.controls;
     return (
@@ -70,12 +83,15 @@ class ControlPanelsContainer extends React.Component {
                 ctrls[s].validationErrors &&
                 (ctrls[s].validationErrors.length > 0)
             )));
+            const isHidden = this.validDependence(section);
+
             return (
               <ControlPanelSection
                 key={section.label}
                 label={section.label}
                 startExpanded={section.expanded}
                 hasErrors={hasErrors}
+                hidden={isHidden}
                 description={section.description}
               >
                 {section.controlSetRows.map((controlSets, i) => (

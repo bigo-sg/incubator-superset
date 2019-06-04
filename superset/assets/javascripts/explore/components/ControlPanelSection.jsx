@@ -9,6 +9,7 @@ const propTypes = {
   children: PropTypes.node.isRequired,
   startExpanded: PropTypes.bool,
   hasErrors: PropTypes.bool,
+  hidden: PropTypes.bool,
 };
 
 const defaultProps = {
@@ -16,6 +17,7 @@ const defaultProps = {
   description: null,
   startExpanded: false,
   hasErrors: false,
+  hidden: false
 };
 
 export default class ControlPanelSection extends React.Component {
@@ -50,10 +52,13 @@ export default class ControlPanelSection extends React.Component {
   }
 
   render() {
+    const divStyle = this.props.hidden ? { display: 'none' } : null;
+
     return (
       <Panel
         className="control-panel-section"
         collapsible
+        style={divStyle}
         expanded={this.state.expanded}
         header={this.renderHeader()}
       >

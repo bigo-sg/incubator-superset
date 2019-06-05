@@ -6,6 +6,7 @@ import json
 import logging
 from multiprocessing.pool import ThreadPool
 import re
+import pandas
 
 from dateutil.parser import parse as dparse
 from flask import escape, Markup
@@ -1087,12 +1088,18 @@ class DruidDatasource(Model, BaseDatasource):
             order_desc=True,
             prequeries=None,
             is_prequery=False,
+            filters_initial=None,
+            filters_follow=None,
+            is_retention=False,
         ):
         """Runs a query against Druid and returns a dataframe.
         """
         # TODO refactor into using a TBD Query object
         client = client or self.cluster.get_pydruid_client()
         row_limit = row_limit or conf.get('ROW_LIMIT')
+
+        filters_initial = DruidDatasource.get_filters(filters_initial, self.num_cols)
+        filters_follow = DruidDatasource.get_filters(filters_follow, self.num_cols)
 
         if not is_timeseries:
             granularity = 'all'
@@ -1136,6 +1143,35 @@ class DruidDatasource(Model, BaseDatasource):
         having_filters = self.get_having_filters(extras.get('having_druid'))
         if having_filters:
             qry['having'] = having_filters
+
+        if is_retention:
+            tmp = datetime.strftime(from_dttm, "%Y-%m-%d")
+            day_begin = datetime.strptime(tmp, "%Y-%m-%d")
+            while day_begin < to_dttm:
+                day_start = datetime.strftime(day_begin, "%Y-%m-%d")
+                day_begin = day_begin + timedelta(days=1)
+                day_end = datetime.strftime(day_begin, "%Y-%m-%d")
+                interval = day_start + "/" + day_end
+
+                filed_name1 = "dau_"+day_start+"_initial"
+                filed_name2 = "dau_"+day_end+"_follow"
+                filed_name_retain = "retain_dau_" + day_start
+                filed_name_retain_rate = "retain_rate_" + day_start
+
+                agg_initial = self.generate_aggregations(filed_name1, interval, filters_initial)
+
+                day_begin_2 = day_begin + timedelta(days=1)
+                day_end_2 = datetime.strftime(day_begin_2, "%Y-%m-%d")
+                interval_2 = day_end + "/" + day_end_2
+                agg_follow = self.generate_aggregations(filed_name2, interval_2, filters_follow)
+
+                qry["aggregations"][filed_name1] = agg_initial
+                qry["aggregations"][filed_name2] = agg_follow
+
+                post_agg = self.generate_post_aggregations(filed_name_retain, filed_name1, filed_name2)
+                qry["post_aggregations"][filed_name_retain] = DruidDatasource.get_post_agg(post_agg)
+                post_agg_rate = self.generate_post_aggregations_rate(filed_name_retain_rate, filed_name_retain, filed_name1)
+                qry["post_aggregations"][filed_name_retain_rate] = DruidDatasource.get_post_agg(post_agg_rate)
 
         order_direction = 'descending' if order_desc else 'ascending'
         if columns:
@@ -1256,7 +1292,69 @@ class DruidDatasource(Model, BaseDatasource):
             logging.info('Query Complete')
         query_str += json.dumps(
             client.query_builder.last_query.query_dict, indent=2)
+
         return query_str
+
+    def generate_aggregations(self, name, interval, filters):
+        agg = {}
+        agg["type"] = "filtered"
+        agg["aggregator"] = {}
+        agg["aggregator"]["type"] = "thetaSketch"
+        agg["aggregator"]["fieldName"] = "uid_theta"
+        agg["aggregator"]["name"] = name
+        agg["filter"] = {}
+        agg["filter"]["type"] = "and"
+        agg["filter"]["fields"] = list()
+        field_interval = {}
+        field_interval["intervals"] = list()
+        field_interval["intervals"].append(interval)
+        field_interval["type"] = "interval"
+        field_interval["dimension"] = "__time"
+        agg["filter"]["fields"].append(field_interval)
+        if filters is not None:
+            agg["filter"]["fields"].append(Filter.build_filter(filters))
+        return agg
+
+    def generate_post_aggregations(self, name, field_name1, field_name2):
+        post_agg = {}
+        post_agg["type"] = "thetaSketchEstimate"
+        post_agg["name"] = name
+        post_agg["field"] = {}
+        post_agg["field"]["type"] = "thetaSketchSetOp"
+        post_agg["field"]["name"] = "temp_name"
+        post_agg["field"]["func"] = "INTERSECT"
+        post_agg["field"]["fields"] = list()
+        fields1 = {}
+        fields2 = {}
+        fields1["type"] = "fieldAccess"
+        fields1["fieldName"] = field_name1
+        fields2["type"] = "fieldAccess"
+        fields2["fieldName"] = field_name2
+        post_agg["field"]["fields"].append(fields1)
+        post_agg["field"]["fields"].append(fields2)
+
+        return post_agg
+
+    def generate_post_aggregations_rate(self, name, field_name1, field_name2):
+        post_agg = {}
+        post_agg["type"] = "arithmetic"
+        post_agg["name"] = name
+        post_agg["fn"] = "/"
+        post_agg["fields"] = list()
+
+        fields1 = {}
+        fields2 = {}
+        fields1["type"] = "finalizingFieldAccess"
+        fields1["fieldName"] = field_name1
+        fields1["name"] = "r1"
+        fields2["type"] = "finalizingFieldAccess"
+        fields2["fieldName"] = field_name2
+        fields2["name"] = "r2"
+
+        post_agg["fields"].append(fields1)
+        post_agg["fields"].append(fields2)
+
+        return post_agg
 
     def query(self, query_obj):
         qry_start_dttm = datetime.now()
@@ -1264,7 +1362,6 @@ class DruidDatasource(Model, BaseDatasource):
         query_str = self.get_query_str(
             client=client, query_obj=query_obj, phase=2)
         df = client.export_pandas()
-
         if df is None or df.size == 0:
             raise Exception(_('No data was returned.'))
         df.columns = [
@@ -1286,7 +1383,49 @@ class DruidDatasource(Model, BaseDatasource):
         cols += query_obj.get('metrics') or []
 
         cols = [col for col in cols if col in df.columns]
-        df = df[cols]
+
+        if(query_obj['is_retention'] is True):
+            cols_new = []
+            cols_new.append("day")
+            for col in cols:
+                cols_new.append(col)
+            cols_new.append("dau_initial")
+            cols_new.append("retain_dau")
+            cols_new.append("retain_rate")
+            df_new = pandas.DataFrame(columns=cols_new)
+            for j in range(0, len(df[cols])):
+                row_data = {}
+                for i in range(0, len(df.columns)):
+                    col_name = df.columns[i]
+                    if re.match(".*_initial$", col_name) is not None:
+                        stats_day = col_name[4:-8]
+                        if stats_day not in row_data:
+                            row_data[stats_day] = {}
+                        row_data[stats_day]["dau_initial"] = df[col_name][j]
+                    elif col_name.startswith("retain_dau_"):
+                        stats_day = col_name[11:]
+                        if stats_day not in row_data:
+                            row_data[stats_day] = {}
+                        row_data[stats_day]["retain_dau"] = df[col_name][j]
+                    elif col_name.startswith("retain_rate_"):
+                        stats_day = col_name[12:]
+                        if stats_day not in row_data:
+                            row_data[stats_day] = {}
+                        row_data[stats_day]["retain_rate"] = df[col_name][j]
+
+                for sd in row_data:
+                    add_data = {}
+                    for col in cols:
+                        add_data[col] = df[col][j]
+                    add_data["day"] = sd
+                    rd = row_data[sd]
+                    for key in rd:
+                        add_data[key] = rd[key]
+                    if add_data["dau_initial"] != 0:
+                        df_new = df_new.append(add_data, ignore_index=True)
+            df = df_new
+        else:
+            df = df[cols]
 
         time_offset = DruidDatasource.time_offset(query_obj['granularity'])
 

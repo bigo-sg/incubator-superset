@@ -231,6 +231,9 @@ class BaseViz(object):
             'druid_time_origin': form_data.get('druid_time_origin', ''),
         }
         filters = form_data.get('filters', [])
+        is_retention = form_data.get('is_retention', False)
+        filters_initial = form_data.get('filters_initial', [])
+        filters_follow = form_data.get('filters_follow', [])
         d = {
             'granularity': granularity,
             'from_dttm': from_dttm,
@@ -246,6 +249,9 @@ class BaseViz(object):
             'order_desc': order_desc,
             'prequeries': [],
             'is_prequery': False,
+            'is_retention': is_retention,
+            'filters_initial': filters_initial,
+            'filters_follow': filters_follow,
         }
         return d
 
@@ -286,11 +292,11 @@ class BaseViz(object):
     def get_payload(self, query_obj=None):
         """Returns a payload of metadata and data"""
         payload = self.get_df_payload(query_obj)
-
         df = payload.get('df')
         if df is not None and len(df.index) == 0:
             raise Exception('No data')
         payload['data'] = self.get_data(df)
+
         del payload['df']
         return payload
 
@@ -431,7 +437,6 @@ class TableViz(BaseViz):
     def query_obj(self):
         d = super(TableViz, self).query_obj()
         fd = self.form_data
-
         if fd.get('all_columns') and (fd.get('groupby') or fd.get('metrics')):
             raise Exception(_(
                 'Choose either fields to [Group By] and [Metrics] or '
@@ -456,6 +461,11 @@ class TableViz(BaseViz):
             ))
 
         d['is_timeseries'] = self.should_be_timeseries()
+
+        d['is_retention'] = fd.get('is_retention')
+        d['filters_initial'] = fd.get('filters_initial')
+        d['filters_follow'] = fd.get('filters_follow')
+
         return d
 
     def get_data(self, df):

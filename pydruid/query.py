@@ -296,7 +296,7 @@ class QueryBuilder(object):
             elif key == 'dimension' and val is not None:
                 query_dict[key] = build_dimension(val)
             elif key == 'dimensions':
-                query_dict['columns'] = [build_dimension(v) for v in val]
+                query_dict[key] = [build_dimension(v) for v in val]
             else:
                 query_dict[key] = val
 

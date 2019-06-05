@@ -89,6 +89,8 @@ export const sections = {
                 'Leave the value control empty to filter empty strings or nulls'),
             controlSetRows: [['having_filters']],
         },
+    ],
+    retention: [
         {
             label: t('Filters Initial'),
             expanded: true,
@@ -103,7 +105,7 @@ export const sections = {
             controlSetRows: [['filters_follow']],
             controlDependence: {'is_retention': true},
         }
-    ],
+    ]
 };
 
 export const visTypes = {
@@ -1615,6 +1617,7 @@ export function sectionsToRender(vizType, datasourceType) {
     const viz = visTypes[vizType];
     return [].concat(
         sections.datasourceAndVizType,
+        datasourceType === 'table' ? [] : sections.retention,
         datasourceType === 'table' ? sections.sqlaTimeSeries : sections.druidTimeSeries,
         viz.controlPanelSections,
         datasourceType === 'table' ? sections.sqlClause : [],

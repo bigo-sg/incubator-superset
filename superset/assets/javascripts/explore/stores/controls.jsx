@@ -1687,7 +1687,7 @@ export const controls = {
         label: t('Retain Field'),
         clearable: false,
         mapStateToProps: state => ({
-            default: (state.datasource && state.datasource.all_cols.some(i => i.includes('uid'))) ? 'uid' : '',
+            default: (state.datasource && state.datasource.all_cols.some(i => i.includes('uid_theta'))) ? 'uid_theta' : '',
             choices: (state.datasource) ? state.datasource.all_cols : [],
         }),
     },

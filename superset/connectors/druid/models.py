@@ -1091,6 +1091,7 @@ class DruidDatasource(Model, BaseDatasource):
             filters_initial=None,
             filters_follow=None,
             is_retention=False,
+            retain_field=None,
         ):
         """Runs a query against Druid and returns a dataframe.
         """
@@ -1100,6 +1101,8 @@ class DruidDatasource(Model, BaseDatasource):
 
         filters_initial = DruidDatasource.get_filters(filters_initial, self.num_cols)
         filters_follow = DruidDatasource.get_filters(filters_follow, self.num_cols)
+        if retain_field is None:
+            retain_field = "uid_theta"
 
         if not is_timeseries:
             granularity = 'all'
@@ -1158,12 +1161,12 @@ class DruidDatasource(Model, BaseDatasource):
                 filed_name_retain = "retain_dau_" + day_start
                 filed_name_retain_rate = "retain_rate_" + day_start
 
-                agg_initial = self.generate_aggregations(filed_name1, interval, filters_initial)
+                agg_initial = self.generate_aggregations(retain_field, filed_name1, interval, filters_initial)
 
                 day_begin_2 = day_begin + timedelta(days=1)
                 day_end_2 = datetime.strftime(day_begin_2, "%Y-%m-%d")
                 interval_2 = day_end + "/" + day_end_2
-                agg_follow = self.generate_aggregations(filed_name2, interval_2, filters_follow)
+                agg_follow = self.generate_aggregations(retain_field, filed_name2, interval_2, filters_follow)
 
                 qry["aggregations"][filed_name1] = agg_initial
                 qry["aggregations"][filed_name2] = agg_follow
@@ -1295,12 +1298,12 @@ class DruidDatasource(Model, BaseDatasource):
 
         return query_str
 
-    def generate_aggregations(self, name, interval, filters):
+    def generate_aggregations(self, retain_field, name, interval, filters):
         agg = {}
         agg["type"] = "filtered"
         agg["aggregator"] = {}
         agg["aggregator"]["type"] = "thetaSketch"
-        agg["aggregator"]["fieldName"] = "uid_theta"
+        agg["aggregator"]["fieldName"] = retain_field
         agg["aggregator"]["name"] = name
         agg["filter"] = {}
         agg["filter"]["type"] = "and"
@@ -1401,17 +1404,18 @@ class DruidDatasource(Model, BaseDatasource):
                         stats_day = col_name[4:-8]
                         if stats_day not in row_data:
                             row_data[stats_day] = {}
-                        row_data[stats_day]["dau_initial"] = df[col_name][j]
+                        row_data[stats_day]["dau_initial"] = int(df[col_name][j])
                     elif col_name.startswith("retain_dau_"):
                         stats_day = col_name[11:]
                         if stats_day not in row_data:
                             row_data[stats_day] = {}
-                        row_data[stats_day]["retain_dau"] = df[col_name][j]
+                        row_data[stats_day]["retain_dau"] = int(df[col_name][j])
                     elif col_name.startswith("retain_rate_"):
                         stats_day = col_name[12:]
                         if stats_day not in row_data:
                             row_data[stats_day] = {}
-                        row_data[stats_day]["retain_rate"] = df[col_name][j]
+                        rate_tmp = round(df[col_name][j] * 100, 2)
+                        row_data[stats_day]["retain_rate"] = str(rate_tmp) + "%"
 
                 for sd in row_data:
                     add_data = {}

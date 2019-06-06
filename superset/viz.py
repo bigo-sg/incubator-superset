@@ -234,6 +234,7 @@ class BaseViz(object):
         is_retention = form_data.get('is_retention', False)
         filters_initial = form_data.get('filters_initial', [])
         filters_follow = form_data.get('filters_follow', [])
+        retain_field = form_data.get('retain_field')
         d = {
             'granularity': granularity,
             'from_dttm': from_dttm,
@@ -252,6 +253,7 @@ class BaseViz(object):
             'is_retention': is_retention,
             'filters_initial': filters_initial,
             'filters_follow': filters_follow,
+            'retain_field': retain_field,
         }
         return d
 
@@ -465,6 +467,7 @@ class TableViz(BaseViz):
         d['is_retention'] = fd.get('is_retention')
         d['filters_initial'] = fd.get('filters_initial')
         d['filters_follow'] = fd.get('filters_follow')
+        d['retain_field'] = fd.get('retain_field')
 
         return d
 

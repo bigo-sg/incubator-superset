@@ -91,6 +91,13 @@ export const sections = {
         },
     ],
     retention: [
+         {
+            label: t('Retain Field'),
+            expanded: true,
+            description: t('目标计算事件——用于留存分析'),
+            controlSetRows: [['retain_field']],
+            controlDependence: {'is_retention': true},
+        },
         {
             label: t('Filters Initial'),
             expanded: true,

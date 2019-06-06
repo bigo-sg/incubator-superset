@@ -8,4 +8,4 @@ node_modules*/*
 stylesheets/*
 vendor/*
 docs/*
-superset/static
+superset/static/

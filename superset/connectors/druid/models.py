@@ -1427,7 +1427,7 @@ class DruidDatasource(Model, BaseDatasource):
                         add_data[key] = rd[key]
                     if add_data["dau_initial"] != 0:
                         df_new = df_new.append(add_data, ignore_index=True)
-            df = df_new
+            df = df_new.sort_values(by="day", ascending=True)
         else:
             df = df[cols]
 

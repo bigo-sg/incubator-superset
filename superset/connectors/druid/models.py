@@ -312,7 +312,7 @@ class DruidColumn(Model, BaseColumn):
         else:
             corrected_type = self.type
 
-        if self.sum and self.is_num and is_cnt is False:
+        if self.sum and self.is_num and is_sum:
             mt = corrected_type.lower() + 'Sum'
             # name = 'sum_' + column_name_new
             name = self.column_name
@@ -335,7 +335,7 @@ class DruidColumn(Model, BaseColumn):
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
 
-        if self.min and self.is_num and is_min and is_sum is False and is_cnt is False:
+        if self.min and self.is_num and is_min:
             mt = corrected_type.lower() + 'Min'
             # name = 'min_' + self.column_name
             metrics[name] = DruidMetric(
@@ -345,7 +345,7 @@ class DruidColumn(Model, BaseColumn):
                 json=json.dumps({
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
-        if self.max and self.is_num and is_max and is_sum is False and is_cnt is False:
+        if self.max and self.is_num and is_max:
             mt = corrected_type.lower() + 'Max'
             # name = 'max_' + self.column_name
             metrics[name] = DruidMetric(
@@ -1099,6 +1099,11 @@ class DruidDatasource(Model, BaseDatasource):
         client = client or self.cluster.get_pydruid_client()
         row_limit = row_limit or conf.get('ROW_LIMIT')
 
+        to_dttm_flag = to_dttm
+        if is_retention:
+            to_dttm_tmp = datetime.strftime(to_dttm, "%Y-%m-%d")
+            to_dttm = datetime.strptime(to_dttm_tmp, "%Y-%m-%d") + timedelta(days=1)
+
         filters_initial = DruidDatasource.get_filters(filters_initial, self.num_cols)
         filters_follow = DruidDatasource.get_filters(filters_follow, self.num_cols)
         if retain_field is None:
@@ -1150,7 +1155,7 @@ class DruidDatasource(Model, BaseDatasource):
         if is_retention:
             tmp = datetime.strftime(from_dttm, "%Y-%m-%d")
             day_begin = datetime.strptime(tmp, "%Y-%m-%d")
-            while day_begin < to_dttm:
+            while day_begin < to_dttm_flag:
                 day_start = datetime.strftime(day_begin, "%Y-%m-%d")
                 day_begin = day_begin + timedelta(days=1)
                 day_end = datetime.strftime(day_begin, "%Y-%m-%d")

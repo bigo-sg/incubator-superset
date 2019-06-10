@@ -1419,7 +1419,7 @@ class DruidDatasource(Model, BaseDatasource):
                         stats_day = col_name[12:]
                         if stats_day not in row_data:
                             row_data[stats_day] = {}
-                        row_data[stats_day]["retain_rate"] = str('%.2f' % round(df[col_name][j] * 100, 2)) + "%"
+                        row_data[stats_day]["retain_rate"] = str('%.2f' % (df[col_name][j] * 100)) + "%"
 
                 for sd in row_data:
                     add_data = {}

@@ -1688,7 +1688,7 @@ export const controls = {
         clearable: false,
         mapStateToProps: state => ({
             default: (state.datasource && state.datasource.all_cols.some(i => i.includes('uid_theta'))) ? 'uid_theta' : '',
-            choices: (state.datasource) ? state.datasource.all_cols : [],
+            choices: (state.datasource) ? state.datasource.all_cols.filter(i => i[0].includes('_theta')) : [],
         }),
     },
 

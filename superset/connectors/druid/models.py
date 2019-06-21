@@ -284,6 +284,7 @@ class DruidColumn(Model, BaseColumn):
         is_cnt = False
         is_max = False
         is_min = False
+        is_qua = False
         column_name_new = self.column_name
 
         if re.match(".*_sum$", column_name) is not None:
@@ -295,8 +296,10 @@ class DruidColumn(Model, BaseColumn):
         elif re.match(".*_min$", column_name) is not None:
             is_min = True
             column_name_new = column_name[:-4]
+        elif re.match(".*_qua$", column_name) is not None:
+            is_qua = True
+            column_name_new = column_name[:-4]
         elif re.match(".*_cnt$", column_name) is not None:
-            is_cnt = True
             column_name_new = column_name[:-4]
             name = self.column_name
             metrics[name] = DruidMetric(
@@ -324,20 +327,9 @@ class DruidColumn(Model, BaseColumn):
                     'type': mt, 'name': name, 'fieldName': self.column_name}),
             )
 
-        if self.avg and self.is_num and is_sum is False and is_cnt is False:
-            mt = corrected_type.lower() + 'Avg'
-            name = 'avg_' + self.column_name
-            metrics[name] = DruidMetric(
-                metric_name=name,
-                metric_type='avg',
-                verbose_name='AVG({})'.format(self.column_name),
-                json=json.dumps({
-                    'type': mt, 'name': name, 'fieldName': self.column_name}),
-            )
-
         if self.min and self.is_num and is_min:
             mt = corrected_type.lower() + 'Min'
-            # name = 'min_' + self.column_name
+            name = 'min_' + self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
                 metric_type='min',
@@ -347,7 +339,7 @@ class DruidColumn(Model, BaseColumn):
             )
         if self.max and self.is_num and is_max:
             mt = corrected_type.lower() + 'Max'
-            # name = 'max_' + self.column_name
+            name = 'max_' + self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
                 metric_type='max',
@@ -390,6 +382,94 @@ class DruidColumn(Model, BaseColumn):
                         'name': name,
                         'fieldNames': [self.column_name]}),
                 )
+
+        if self.type == 'quantilesDoublesSketch' or is_qua:
+            name = self.column_name
+            metrics[name] = DruidMetric(
+                metric_name=name,
+                verbose_name='quantiles({})'.format(column_name_new),
+                metric_type='quantilesDoublesSketch',
+                json=json.dumps({
+                    'type': 'quantilesDoublesSketch',
+                    'name': name,
+                    'fieldName': name
+                })
+            )
+            name_frac_10 = name + "_10"
+            metrics[name_frac_10] = DruidMetric(
+                metric_name=name_frac_10,
+                verbose_name='quantiles({})'.format(name_frac_10),
+                metric_type='postagg',
+                json=json.dumps({
+                    'type': 'quantilesDoublesSketchToQuantiles',
+                    'name': name_frac_10,
+                    'field': {
+                        "type": "fieldAccess",
+                        "fieldName": "avgspeed_qua"
+                    },
+                    "fractions": [0.10]
+                })
+            )
+            name_frac_30 = name + "_30"
+            metrics[name_frac_30] = DruidMetric(
+                metric_name=name_frac_30,
+                verbose_name='quantiles({})'.format(name_frac_30),
+                metric_type='postagg',
+                json=json.dumps({
+                    'type': 'quantilesDoublesSketchToQuantiles',
+                    'name': name_frac_30,
+                    'field': {
+                        "type": "fieldAccess",
+                        "fieldName": "avgspeed_qua"
+                    },
+                    "fractions": [0.30]
+                })
+            )
+            name_frac_50 = name + "_50"
+            metrics[name_frac_50] = DruidMetric(
+                metric_name=name_frac_50,
+                verbose_name='quantiles({})'.format(name_frac_50),
+                metric_type='postagg',
+                json=json.dumps({
+                    'type': 'quantilesDoublesSketchToQuantiles',
+                    'name': name_frac_50,
+                    'field': {
+                        "type": "fieldAccess",
+                        "fieldName": "avgspeed_qua"
+                    },
+                    "fractions": [0.50]
+                })
+            )
+            name_frac_70 = name + "_70"
+            metrics[name_frac_70] = DruidMetric(
+                metric_name=name_frac_70,
+                verbose_name='quantiles({})'.format(name_frac_70),
+                metric_type='postagg',
+                json=json.dumps({
+                    'type': 'quantilesDoublesSketchToQuantiles',
+                    'name': name_frac_70,
+                    'field': {
+                        "type": "fieldAccess",
+                        "fieldName": "avgspeed_qua"
+                    },
+                    "fractions": [0.70]
+                })
+            )
+            name_frac_90 = name + "_90"
+            metrics[name_frac_90] = DruidMetric(
+                metric_name=name_frac_90,
+                verbose_name='quantiles({})'.format(name_frac_90),
+                metric_type='postagg',
+                json=json.dumps({
+                    'type': 'quantilesDoublesSketchToQuantiles',
+                    'name': name_frac_90,
+                    'field': {
+                        "type": "fieldAccess",
+                        "fieldName": "avgspeed_qua"
+                    },
+                    "fractions": [0.90]
+                })
+            )
         return metrics
 
     def generate_metrics(self):

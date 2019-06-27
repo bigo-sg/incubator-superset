@@ -405,7 +405,7 @@ class DruidColumn(Model, BaseColumn):
                     'name': name_frac_10,
                     'field': {
                         "type": "fieldAccess",
-                        "fieldName": "avgspeed_qua"
+                        "fieldName": self.column_name
                     },
                     "fractions": [0.10]
                 })
@@ -420,7 +420,7 @@ class DruidColumn(Model, BaseColumn):
                     'name': name_frac_30,
                     'field': {
                         "type": "fieldAccess",
-                        "fieldName": "avgspeed_qua"
+                        "fieldName": self.column_name
                     },
                     "fractions": [0.30]
                 })
@@ -435,7 +435,7 @@ class DruidColumn(Model, BaseColumn):
                     'name': name_frac_50,
                     'field': {
                         "type": "fieldAccess",
-                        "fieldName": "avgspeed_qua"
+                        "fieldName": self.column_name
                     },
                     "fractions": [0.50]
                 })
@@ -450,7 +450,7 @@ class DruidColumn(Model, BaseColumn):
                     'name': name_frac_70,
                     'field': {
                         "type": "fieldAccess",
-                        "fieldName": "avgspeed_qua"
+                        "fieldName": self.column_name
                     },
                     "fractions": [0.70]
                 })
@@ -465,7 +465,7 @@ class DruidColumn(Model, BaseColumn):
                     'name': name_frac_90,
                     'field': {
                         "type": "fieldAccess",
-                        "fieldName": "avgspeed_qua"
+                        "fieldName": self.column_name
                     },
                     "fractions": [0.90]
                 })
@@ -1523,7 +1523,6 @@ class DruidDatasource(Model, BaseDatasource):
             return dt + timedelta(milliseconds=time_offset)
         if DTTM_ALIAS in df.columns and time_offset:
             df[DTTM_ALIAS] = df[DTTM_ALIAS].apply(increment_timestamp)
-
         return QueryResult(
             df=df,
             query=query_str,

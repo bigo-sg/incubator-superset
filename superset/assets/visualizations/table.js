@@ -166,6 +166,9 @@ function tableVis(slice, payload) {
   if (fd.timeseries_limit_metric) {
     // Sort by as specified
     sortBy = fd.timeseries_limit_metric;
+  } else if (fd.include_time && data.columns.length > 0) {
+    // Sort by time
+    sortBy = data.columns[0];
   } else if (metrics.length > 0) {
     // If not specified, use the first metric from the list
     sortBy = metrics[0];

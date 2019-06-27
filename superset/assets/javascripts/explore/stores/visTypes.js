@@ -748,6 +748,7 @@ export const visTypes = {
                 description: t('Use this section if you want a query that aggregates'),
                 controlSetRows: [
                     ['groupby'],
+                   // ['grouping_sets'], 暂时不用
                     ['metrics'],
                     ['percent_metrics'],
                     ['include_time'],

@@ -259,3 +259,15 @@ export function getParam(name) {
   const results = regex.exec(location.search);
   return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
+
+export function getCombinationGroup(data, index = 0, group = []) {
+	const need_apply = [];
+	need_apply.push(data[index]);
+	for(let i = 0; i < group.length; i++) {
+		need_apply.push(group[i] + ',' + data[index]);
+	}
+	group.push.apply(group, need_apply);
+
+	if (index + 1 >= data.length) return group;
+	else return getCombinationGroup(data, index + 1, group);
+}

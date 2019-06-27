@@ -39,7 +39,7 @@ class ControlPanelsContainer extends React.Component {
     }
     // Applying mapStateToProps if needed
     if (mapF) {
-      return Object.assign({}, control, mapF(this.props.exploreState, control));
+      return Object.assign({}, control, mapF(this.props.exploreState, control, this.props.form_data));
     }
     return control;
   }

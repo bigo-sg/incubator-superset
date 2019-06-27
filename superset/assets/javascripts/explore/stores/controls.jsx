@@ -1,7 +1,7 @@
 import React from 'react';
-import {formatSelectOptionsForRange, formatSelectOptions} from '../../modules/utils';
+import {formatSelectOptions, formatSelectOptionsForRange, getCombinationGroup} from '../../modules/utils';
 import * as v from '../validators';
-import {colorPrimary, ALL_COLOR_SCHEMES, spectrums} from '../../modules/colors';
+import {ALL_COLOR_SCHEMES, colorPrimary, spectrums} from '../../modules/colors';
 import {defaultViewport} from '../../modules/geo';
 import MetricOption from '../../components/MetricOption';
 import ColumnOption from '../../components/ColumnOption';
@@ -1676,42 +1676,6 @@ export const controls = {
         }),
     },
 
-    is_retention: {
-        type: 'CheckboxControl',
-        label: t('Is Retention'),
-        default: false,
-    },
-
-    retain_field: {
-        type: 'SelectControl',
-        label: t('Retain Field'),
-        clearable: false,
-        mapStateToProps: state => ({
-            default: (state.datasource && state.datasource.all_cols.some(i => i.includes('uid_theta'))) ? 'uid_theta' : '',
-            choices: (state.datasource) ? state.datasource.all_cols.filter(i => i[0].includes('_theta')) : [],
-        }),
-    },
-
-    filters_initial: {
-        type: 'FilterControl',
-        label: '',
-        default: [],
-        description: '',
-        mapStateToProps: state => ({
-            datasource: state.datasource,
-        }),
-    },
-
-    filters_follow: {
-        type: 'FilterControl',
-        label: '',
-        default: [],
-        description: '',
-        mapStateToProps: state => ({
-            datasource: state.datasource,
-        }),
-    },
-
     annotation_layers: {
         type: 'AnnotationLayerControl',
         label: '',
@@ -1992,6 +1956,54 @@ export const controls = {
         renderTrigger: true,
         description: t('Whether to fill the objects'),
         default: false,
+    },
+
+    // follow override
+    is_retention: {
+        type: 'CheckboxControl',
+        label: t('Is Retention'),
+        default: false,
+    },
+
+    retain_field: {
+        type: 'SelectControl',
+        label: t('Retain Field'),
+        clearable: false,
+        mapStateToProps: state => ({
+            default: (state.datasource && state.datasource.all_cols.some(i => i.includes('uid_theta'))) ? 'uid_theta' : '',
+            choices: (state.datasource) ? state.datasource.all_cols.filter(i => i[0].includes('_theta')) : [],
+        }),
+    },
+
+    filters_initial: {
+        type: 'FilterControl',
+        label: '',
+        default: [],
+        description: '',
+        mapStateToProps: state => ({
+            datasource: state.datasource,
+        }),
+    },
+
+    filters_follow: {
+        type: 'FilterControl',
+        label: '',
+        default: [],
+        description: '',
+        mapStateToProps: state => ({
+            datasource: state.datasource,
+        }),
+    },
+
+    grouping_sets: {
+        type: 'SelectControl',
+        multi: true,
+        label: t('Grouping Sets'),
+        default: [],
+        description: t('One or many controls to grouping sets'),
+        mapStateToProps: (state, controls, {groupby}) => ({
+            choices: groupby && groupby.length > 0 ? getCombinationGroup(groupby).map(i => {return [i, i.replace('_dim', '')]}) : [],
+        }),
     },
 };
 export default controls;

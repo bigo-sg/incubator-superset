@@ -18,6 +18,7 @@ import logging
 import math
 import traceback
 import uuid
+import re
 
 from dateutil import relativedelta as rdelta
 from flask import escape, request
@@ -148,6 +149,14 @@ class BaseViz(object):
         # be considered as the default ISO date format
         # If the datetime format is unix, the parse will use the corresponding
         # parsing logic.
+        cols_new = list()
+        for col in df.columns:
+            if re.match(".*_dim$", col) is not None:
+                cols_new.append(col[:-4])
+            else:
+                cols_new.append(col)
+        df.columns = cols_new
+
         if df is None or df.empty:
             self.status = utils.QueryStatus.FAILED
             if not self.error_message:

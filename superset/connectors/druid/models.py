@@ -1211,6 +1211,8 @@ class DruidDatasource(Model, BaseDatasource):
         to_generate_agg = list()
         for key in post_aggs:
             pgg = post_aggs[key]
+            if 'fn' not in pgg.post_aggregator:
+                continue
             if pgg.post_aggregator['fn'] == '/':
                 fields = pgg.post_aggregator['fields']
                 for field in fields:

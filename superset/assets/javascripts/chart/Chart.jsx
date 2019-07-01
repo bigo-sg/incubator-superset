@@ -141,7 +141,17 @@ class Chart extends React.PureComponent {
 
   d3format(col, number) {
     const { datasource } = this.props;
-    const format = (datasource.column_formats && datasource.column_formats[col]) || ',.0f';
+    let defaultFormat = ',.0f';
+    if ((number.toString()).indexOf('.') > -1) {
+      const num = number.toString().split(".")[1].length;
+      if (num > 4) {
+        defaultFormat = ',.4f';
+      } else {
+        defaultFormat = ',.'+num+'f';
+      }
+    }
+    console.log(defaultFormat)
+    const format = (datasource.column_formats && datasource.column_formats[col]) || defaultFormat;
 
     return d3format(format, number);
   }

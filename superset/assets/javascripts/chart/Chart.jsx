@@ -150,9 +150,7 @@ class Chart extends React.PureComponent {
         defaultFormat = ',.'+num+'f';
       }
     }
-    console.log(defaultFormat)
     const format = (datasource.column_formats && datasource.column_formats[col]) || defaultFormat;
-
     return d3format(format, number);
   }
 

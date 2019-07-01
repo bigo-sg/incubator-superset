@@ -83,9 +83,11 @@ function tableVis(slice, payload) {
       if (typeof (val) === 'string') {
         html = `<span class="like-pre">${val}</span>`;
       }
-      if (isMetric) {
+
+      if (typeof (val) === 'number') {
         html = slice.d3format(c, val);
       }
+
       if (c[0] === '%') {
         html = d3.format('.3p')(val);
       }

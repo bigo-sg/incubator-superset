@@ -392,7 +392,8 @@ class DruidColumn(Model, BaseColumn):
                 json=json.dumps({
                     'type': 'quantilesDoublesSketch',
                     'name': name,
-                    'fieldName': name
+                    'fieldName': name,
+                    'k': 8192
                 })
             )
             name_frac_10 = name + "_10"
@@ -1207,7 +1208,28 @@ class DruidDatasource(Model, BaseDatasource):
             metrics,
             metrics_dict)
 
+        to_generate_agg = list()
+        for key in post_aggs:
+            pgg = post_aggs[key]
+            if pgg.post_aggregator['fn'] == '/':
+                fields = pgg.post_aggregator['fields']
+                for field in fields:
+                    if str(field['fieldName']) != 'total_sum':
+                        to_generate_agg.append(field['fieldName'])
+        generate_aggs={}
+        for aggName in to_generate_agg:
+            new_agg = {}
+            new_agg['type'] = 'longSum'
+            new_agg['name'] = aggName
+            new_agg['fieldName'] = aggName
+            generate_aggs[aggName] = new_agg
+
         aggregations = self.get_aggregations(all_metrics)
+
+        for agg in generate_aggs:
+            if agg not in aggregations:
+                aggregations[agg] = generate_aggs[agg]
+
         self.check_restricted_metrics(aggregations)
         # the dimensions list with dimensionSpecs expanded
         dimensions = self.get_dimensions(groupby, columns_dict)

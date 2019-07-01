@@ -2,7 +2,7 @@ import d3 from 'd3';
 import dt from 'datatables.net-bs';
 import 'datatables.net-bs/css/dataTables.bootstrap.css';
 
-import { fixDataTableBodyHeight, d3TimeFormatPreset } from '../javascripts/modules/utils';
+import {fixDataTableBodyHeight, d3TimeFormatPreset} from '../javascripts/modules/utils';
 import './table.css';
 
 const $ = require('jquery');
@@ -29,6 +29,7 @@ function tableVis(slice, payload) {
     }
     return arr;
   }
+
   const maxes = {};
   for (let i = 0; i < metrics.length; i += 1) {
     maxes[metrics[i]] = d3.max(col(metrics[i]));
@@ -84,13 +85,18 @@ function tableVis(slice, payload) {
         html = `<span class="like-pre">${val}</span>`;
       }
 
-      if (typeof (val) === 'number') {
-        html = slice.d3format(c, val);
+      if (c !== '__timestamp') {
+        if (typeof (val) === 'number') {
+          html = slice.d3format(c, val);
+        } else if (Array.isArray(val) && typeof (val[0]) === 'number') {
+          html = slice.d3format(c, val[0]);
+        }
       }
 
       if (c[0] === '%') {
         html = d3.format('.3p')(val);
       }
+
       return {
         col: c,
         val,
@@ -162,7 +168,7 @@ function tableVis(slice, payload) {
     scrollX: true,
   });
   fixDataTableBodyHeight(
-      container.find('.dataTables_wrapper'), height);
+    container.find('.dataTables_wrapper'), height);
   // Sorting table by main column
   let sortBy;
   if (fd.timeseries_limit_metric) {

@@ -536,15 +536,17 @@ class timeout(object):
 
     def __enter__(self):
         try:
-            signal.signal(signal.SIGALRM, self.handle_timeout)
-            signal.alarm(self.seconds)
+            # signal.signal(signal.SIGALRM, self.handle_timeout)
+            # signal.alarm(self.seconds)
+            pass
         except ValueError as e:
             logging.warning("timeout can't be used in the current context")
             logging.exception(e)
 
     def __exit__(self, type, value, traceback):
         try:
-            signal.alarm(0)
+            # signal.alarm(0)
+            pass
         except ValueError as e:
             logging.warning("timeout can't be used in the current context")
             logging.exception(e)
@@ -724,7 +726,8 @@ def has_access(f):
 
 def choicify(values):
     """Takes an iterable and makes an iterable of tuples with it"""
-    return [(v, v) for v in values]
+    # return [(v, v) for v in values]
+    return [(v, str.split(v, "_dim")[0]) for v in values]
 
 
 def setup_cache(app, cache_config):

@@ -51,6 +51,9 @@ from .base import (
     json_error_response, SupersetFilter, SupersetModelView, YamlExportMixin,
 )
 
+from io import BytesIO
+import openpyxl
+
 config = app.config
 stats_logger = config.get('STATS_LOGGER')
 log_this = models.Log.log_this
@@ -2440,6 +2443,66 @@ class Superset(BaseSupersetView):
         response = Response(csv, mimetype='text/csv')
         response.headers['Content-Disposition'] = (
             'attachment; filename={}.csv'.format(unidecode(query.name)))
+        logging.info('Ready to return response')
+        return response
+
+    @has_access
+    @expose('/xlsx/<client_id>')
+    @log_this
+    def excel(self, client_id):
+        """Download the query results as csv."""
+        logging.info('Exporting CSV file [{}]'.format(client_id))
+        query = (
+            db.session.query(Query)
+            .filter_by(client_id=client_id)
+            .one()
+        )
+
+        rejected_tables = self.rejected_datasources(
+            query.sql, query.database, query.schema)
+        if rejected_tables:
+            flash(get_datasource_access_error_msg('{}'.format(rejected_tables)))
+            return redirect('/')
+        blob = None
+        if results_backend and query.results_key:
+            logging.info(
+                'Fetching CSV from results backend '
+                '[{}]'.format(query.results_key))
+            blob = results_backend.get(query.results_key)
+        if blob:
+            logging.info('Decompressing')
+            json_payload = utils.zlib_decompress_to_string(blob)
+            obj = json.loads(json_payload)
+            columns = [c['name'] for c in obj['columns']]
+            df = pd.DataFrame.from_records(obj['data'], columns=columns)
+        else:
+            logging.info('Running a query to turn into CSV')
+            sql = query.select_sql or query.executed_sql
+            df = query.database.get_df(sql, query.schema)
+            # # TODO(bkyryliuk): add compression=gzip for big files.
+
+        col_names = list()
+        for col in df:
+            col_names.append(col)
+        rows = list()
+        rows.append(col_names)
+        for row in df.itertuples(index=True, name='Pandas'):
+            row_data = list()
+            for col in col_names:
+                row_data.append(getattr(row, col))
+            rows.append(row_data)
+        xlsx = openpyxl.Workbook()
+        table = xlsx.active
+        table.title = 'data'
+        for index, row in enumerate(rows):
+            table.append(row)
+
+        xlsxfile = BytesIO()
+        xlsx.save(xlsxfile)
+        response = Response(xlsxfile.getvalue(), mimetype='text/xlsx')
+
+        response.headers['Content-Disposition'] = (
+            'attachment; filename={}.xlsx'.format(query.name))
         logging.info('Ready to return response')
         return response
 

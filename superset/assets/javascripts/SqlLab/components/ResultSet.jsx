@@ -74,7 +74,7 @@ export default class ResultSet extends React.PureComponent {
       if (this.props.xlsx) {
         xlsxButton = (
           <Button bsSize="small" href={'/superset/xlsx/' + this.props.query.id}>
-            <i className="fa fa-file-excel-o" /> {t('.XLSX')}
+            <i className="fa fa-file-excel-o" /> {t('Excel')}
           </Button>
         );
       }

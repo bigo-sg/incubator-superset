@@ -1,18 +1,20 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Alert, Button, ButtonGroup, ProgressBar } from 'react-bootstrap';
+import {Alert, Button, ButtonGroup, ProgressBar} from 'react-bootstrap';
+import {Table} from "reactable";
 import shortid from 'shortid';
 
 import VisualizeModal from './VisualizeModal';
 import HighlightedSql from './HighlightedSql';
-import FilterableTable from '../../components/FilterableTable/FilterableTable';
 import QueryStateLabel from './QueryStateLabel';
-import { t } from '../../locales';
+import CopyToClipboard from "../../components/CopyToClipboard";
+import {t} from '../../locales';
 
 const propTypes = {
   actions: PropTypes.object,
   csv: PropTypes.bool,
   xlsx: PropTypes.bool,
+  clipboard: PropTypes.bool,
   query: PropTypes.object,
   search: PropTypes.bool,
   showSql: PropTypes.bool,
@@ -26,6 +28,7 @@ const defaultProps = {
   showSql: false,
   csv: true,
   xlsx: true,
+  clipboard: true,
   actions: {},
   cache: false,
 };
@@ -39,19 +42,23 @@ export default class ResultSet extends React.PureComponent {
       searchText: '',
       showModal: false,
       data: null,
+      copyData: null,
+      copyColumns: null,
     };
   }
+
   componentDidMount() {
     // only do this the first time the component is rendered/mounted
     this.reRunQueryIfSessionTimeoutErrorOnMount();
   }
+
   componentWillReceiveProps(nextProps) {
     // when new results comes in, save them locally and clear in store
     if (this.props.cache && (!nextProps.query.cached)
       && nextProps.query.results
       && nextProps.query.results.data.length > 0) {
       this.setState(
-        { data: nextProps.query.results.data },
+        {data: nextProps.query.results.data},
         this.clearQueryResults(nextProps.query),
       );
     }
@@ -60,37 +67,55 @@ export default class ResultSet extends React.PureComponent {
       this.fetchResults(nextProps.query);
     }
   }
+
   getControls() {
-    if (this.props.search || this.props.visualize || this.props.csv || this.props.xlsx) {
+    const {search, visualize, csv, xlsx, clipboard} = this.props;
+    if (search || visualize || csv || xlsx || clipboard) {
       let csvButton;
-      if (this.props.csv) {
+      if (csv) {
         csvButton = (
           <Button bsSize="small" href={'/superset/csv/' + this.props.query.id}>
-            <i className="fa fa-file-text-o" /> {t('.CSV')}
+            <i className="fa fa-file-text-o"/> {t('.CSV')}
           </Button>
         );
       }
       let xlsxButton;
-      if (this.props.xlsx) {
+      if (xlsx) {
         xlsxButton = (
           <Button bsSize="small" href={'/superset/xlsx/' + this.props.query.id}>
-            <i className="fa fa-file-excel-o" /> {t('Excel')}
+            <i className="fa fa-file-excel-o"/> {t('Excel')}
           </Button>
         );
       }
       let visualizeButton;
-      if (this.props.visualize) {
+      if (visualize) {
         visualizeButton = (
           <Button
             bsSize="small"
             onClick={this.showModal.bind(this)}
           >
-            <i className="fa fa-line-chart m-l-1" /> {t('Visualize')}
+            <i className="fa fa-line-chart m-l-1"/> {t('Visualize')}
           </Button>
         );
       }
+      let copyButton;
+      if (clipboard) {
+        const html = this.copyResultData();
+        copyButton = (
+          <CopyToClipboard
+            shouldShowText={false}
+            copyNode={(
+              <Button bsSize="small">
+                <i className="fa fa-clipboard"/> {t('Copy')}
+              </Button>
+            )}
+            tooltipText={t('copy result to clipboard')}
+            text={html}
+          />
+        );
+      }
       let searchBox;
-      if (this.props.search) {
+      if (search) {
         searchBox = (
           <input
             type="text"
@@ -117,11 +142,13 @@ export default class ResultSet extends React.PureComponent {
         </div>
       );
     }
-    return <div className="noControls" />;
+    return <div className="noControls"/>;
   }
+
   clearQueryResults(query) {
     this.props.actions.clearQueryResults(query);
   }
+
   popSelectStar() {
     const qe = {
       id: shortid.generate(),
@@ -132,27 +159,55 @@ export default class ResultSet extends React.PureComponent {
     };
     this.props.actions.addQueryEditor(qe);
   }
+
   showModal() {
-    this.setState({ showModal: true });
+    this.setState({showModal: true});
   }
+
   hideModal() {
-    this.setState({ showModal: false });
+    this.setState({showModal: false});
   }
+
   changeSearch(event) {
-    this.setState({ searchText: event.target.value });
+    this.setState({searchText: event.target.value});
   }
+
   fetchResults(query) {
     this.props.actions.fetchQueryResults(query);
   }
+
   reFetchQueryResults(query) {
     this.props.actions.reFetchQueryResults(query);
   }
+
   reRunQueryIfSessionTimeoutErrorOnMount() {
-    const { query } = this.props;
+    const {query} = this.props;
     if (query.errorMessage && query.errorMessage.indexOf('session timed out') > 0) {
       this.props.actions.runQuery(query, true);
     }
   }
+
+  getResultData() {
+      const query = this.props.query;
+      const results = query.results;
+      let data;
+      if (this.props.cache && query.cached) {
+        data = this.state.data;
+      } else if (results && results.data) {
+        data = results.data;
+      }
+      const columns = results.columns.map(col => col.name);
+      return {data, columns};
+  }
+
+  copyResultData() {
+    const {data} = this.getResultData();
+    if (data && data.length > 0 && this.resultTable) {
+      return '';
+    }
+    return "暂无数据";
+  }
+
   render() {
     const query = this.props.query;
     const height = Math.max(0,
@@ -160,7 +215,7 @@ export default class ResultSet extends React.PureComponent {
     let sql;
 
     if (this.props.showSql) {
-      sql = <HighlightedSql sql={query.sql} />;
+      sql = <HighlightedSql sql={query.sql}/>;
     }
 
     if (query.state === 'stopped') {
@@ -183,13 +238,7 @@ export default class ResultSet extends React.PureComponent {
           </Alert>
         </div>);
     } else if (query.state === 'success') {
-      const results = query.results;
-      let data;
-      if (this.props.cache && query.cached) {
-        data = this.state.data;
-      } else if (results && results.data) {
-        data = results.data;
-      }
+      const {data, columns} = this.getResultData();
       if (data && data.length > 0) {
         return (
           <div>
@@ -200,12 +249,22 @@ export default class ResultSet extends React.PureComponent {
             />
             {this.getControls.bind(this)()}
             {sql}
-            <FilterableTable
-              data={data}
-              orderedColumnKeys={results.columns.map(col => col.name)}
-              height={height}
-              filterText={this.state.searchText}
-            />
+            <div
+              style={{height}}
+              className="result-table"
+              ref={(ref) => { this.resultTable = ref; }}
+            >
+              <Table
+                className="table table-condensed"
+                columns={columns}
+                data={data}
+                sortable={true}
+                itemsPerPage={10}
+                filterable={columns}
+                filterBy={this.state.searchText}
+                hideFilterInput
+              />
+            </div>
           </div>
         );
       } else if (data && data.length === 0) {
@@ -237,7 +296,9 @@ export default class ResultSet extends React.PureComponent {
       trackingUrl = (
         <Button
           bsSize="small"
-          onClick={() => { window.open(query.trackingUrl); }}
+          onClick={() => {
+            window.open(query.trackingUrl);
+          }}
         >
           {t('Track Job')}
         </Button>
@@ -245,8 +306,8 @@ export default class ResultSet extends React.PureComponent {
     }
     return (
       <div>
-        <img className="loading" alt={t('Loading...')} src="/static/assets/images/loading.gif" />
-        <QueryStateLabel query={query} />
+        <img className="loading" alt={t('Loading...')} src="/static/assets/images/loading.gif"/>
+        <QueryStateLabel query={query}/>
         {progressBar}
         <div>
           {trackingUrl}

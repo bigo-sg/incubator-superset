@@ -12,7 +12,6 @@ import { appSetup } from '../common';
 
 import './main.less';
 import '../../stylesheets/reactable-pagination.css';
-import '../components/FilterableTable/FilterableTableStyles.css';
 
 appSetup();
 initJQueryAjax();

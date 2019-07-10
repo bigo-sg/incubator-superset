@@ -110,7 +110,7 @@ export default class ResultSet extends React.PureComponent {
               </Button>
             )}
             tooltipText={t('copy result to clipboard')}
-            text={html}
+            node={html}
           />
         );
       }
@@ -133,6 +133,7 @@ export default class ResultSet extends React.PureComponent {
                 {visualizeButton}
                 {csvButton}
                 {xlsxButton}
+                {copyButton}
               </ButtonGroup>
             </div>
             <div className="pull-right">
@@ -203,9 +204,9 @@ export default class ResultSet extends React.PureComponent {
   copyResultData() {
     const {data} = this.getResultData();
     if (data && data.length > 0 && this.resultTable) {
-      return '';
+      return this.resultTable;
     }
-    return "暂无数据";
+    return null;
   }
 
   render() {
@@ -259,7 +260,6 @@ export default class ResultSet extends React.PureComponent {
                 columns={columns}
                 data={data}
                 sortable={true}
-                itemsPerPage={10}
                 filterable={columns}
                 filterBy={this.state.searchText}
                 hideFilterInput

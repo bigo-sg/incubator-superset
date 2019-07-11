@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Alert, Button, ButtonGroup, ProgressBar} from 'react-bootstrap';
+import {Alert, Button, ButtonGroup, OverlayTrigger, ProgressBar, Tooltip} from 'react-bootstrap';
 import {Table} from "reactable";
 import shortid from 'shortid';
 
@@ -41,10 +41,14 @@ export default class ResultSet extends React.PureComponent {
     this.state = {
       searchText: '',
       showModal: false,
+      hasCopied: false,
       data: null,
       copyData: null,
       copyColumns: null,
     };
+
+    this.resetTooltipText = this.resetTooltipText.bind(this);
+    this.onMouseOut = this.onMouseOut.bind(this);
   }
 
   componentDidMount() {
@@ -99,19 +103,21 @@ export default class ResultSet extends React.PureComponent {
         );
       }
       let copyButton;
-      if (clipboard && this.resultTable) {
-        const html = this.copyResultData();
+      if (clipboard) {
         copyButton = (
-          <CopyToClipboard
-            shouldShowText={false}
-            copyNode={(
-              <Button bsSize="small">
-                <i className="fa fa-clipboard"/> {t('Copy')}
-              </Button>
-            )}
-            tooltipText={t('copy result to clipboard')}
-            node={html}
-          />
+          <OverlayTrigger
+            placement="top"
+            style={{ cursor: 'pointer' }}
+            overlay={this.renderTooltip()}
+            trigger={['hover']}
+            bsStyle="link"
+            onClick={this.copyResultData.bind(this)}
+            onMouseOut={this.onMouseOut}
+          >
+          <Button bsSize="small">
+            <i className="fa fa-clipboard"/> {t('Copy')}
+          </Button>
+        </OverlayTrigger>
         );
       }
       let searchBox;
@@ -146,8 +152,32 @@ export default class ResultSet extends React.PureComponent {
     return <div className="noControls"/>;
   }
 
+  renderTooltip() {
+    return (
+      <Tooltip id="copy-to-clipboard-tooltip">
+        {this.tooltipText()}
+      </Tooltip>
+    );
+  }
+
+  tooltipText() {
+    if (this.state.hasCopied) {
+      return t('Copied!');
+    }
+    return t('Copy to clipboard!');
+  }
+
   clearQueryResults(query) {
     this.props.actions.clearQueryResults(query);
+  }
+
+  resetTooltipText() {
+    this.setState({ hasCopied: false });
+  }
+
+  onMouseOut() {
+    // delay to avoid flash of text change on tooltip
+    setTimeout(this.resetTooltipText, 200);
   }
 
   popSelectStar() {
@@ -202,11 +232,26 @@ export default class ResultSet extends React.PureComponent {
   }
 
   copyResultData() {
-    const {data} = this.getResultData();
-    if (data && data.length > 0) {
-      return this.resultTable;
+    const selection = document.getSelection();
+    selection.removeAllRanges();
+    document.activeElement.blur();
+    const range = document.createRange();
+    range.selectNode(this.resultTable);
+    selection.addRange(range);
+    try {
+      if (!document.execCommand('copy')) {
+        throw new Error(t('Not successful'));
+      }
+    } catch (err) {
+      window.alert(t('Sorry, your browser does not support copying. Use Ctrl / Cmd + C!')); // eslint-disable-line
     }
-    return null;
+    if (selection.removeRange) {
+      selection.removeRange(range);
+    } else {
+      selection.removeAllRanges();
+    }
+
+    this.setState({ hasCopied: true });
   }
 
   render() {

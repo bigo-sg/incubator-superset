@@ -11,7 +11,6 @@ const propTypes = {
   text: PropTypes.string,
   inMenu: PropTypes.bool,
   tooltipText: PropTypes.string,
-  node: PropTypes.object,
 };
 
 const defaultProps = {
@@ -43,8 +42,6 @@ export default class CopyToClipboard extends React.Component {
   onClick() {
     if (this.props.getText) {
       this.props.getText((d) => { this.copyToClipboard(d); });
-    } else if (this.props.node) {
-      this.copyToClipboard(this.props.node, false);
     } else {
       this.copyToClipboard(this.props.text);
     }
@@ -54,25 +51,20 @@ export default class CopyToClipboard extends React.Component {
     this.setState({ hasCopied: false });
   }
 
-  copyToClipboard(textToCopy, isText=true) {
+  copyToClipboard(textToCopy) {
     const selection = document.getSelection();
     selection.removeAllRanges();
     document.activeElement.blur();
     const range = document.createRange();
-    let span = null;
-    if (isText) {
-      span = document.createElement('span');
-      span.textContent = textToCopy;
-      span.style.all = 'unset';
-      span.style.position = 'fixed';
-      span.style.top = 0;
-      span.style.clip = 'rect(0, 0, 0, 0)';
-      span.style.whiteSpace = 'pre';
-      document.body.appendChild(span);
-      range.selectNode(span);
-    } else {
-      range.selectNode(textToCopy);
-    }
+    const span = document.createElement('span');
+    span.textContent = textToCopy;
+    span.style.all = 'unset';
+    span.style.position = 'fixed';
+    span.style.top = 0;
+    span.style.clip = 'rect(0, 0, 0, 0)';
+    span.style.whiteSpace = 'pre';
+    document.body.appendChild(span);
+    range.selectNode(span);
 
     selection.addRange(range);
     try {
@@ -82,9 +74,7 @@ export default class CopyToClipboard extends React.Component {
     } catch (err) {
       window.alert(t('Sorry, your browser does not support copying. Use Ctrl / Cmd + C!')); // eslint-disable-line
     }
-    if (isText) {
-      document.body.removeChild(span);
-    }
+    document.body.removeChild(span);
     if (selection.removeRange) {
       selection.removeRange(range);
     } else {

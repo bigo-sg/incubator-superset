@@ -410,6 +410,8 @@ class SqlaTable(Model, BaseDatasource):
         )
         logging.info(sql)
         sql = sqlparse.format(sql, reindent=True)
+        sql = sql.replace(" 00:00:00", "")
+
         if query_obj['is_prequery']:
             query_obj['prequeries'].append(sql)
         return sql
@@ -449,8 +451,18 @@ class SqlaTable(Model, BaseDatasource):
             order_desc=True,
             prequeries=None,
             is_prequery=False,
+            retain_field=None,
+            is_retention=False,
+            filters_initial=None,
+            filters_follow=None,
         ):
         """Querying any sqla table from this common interface"""
+
+        # datetime.strptime(str(from_dttm), "%Y-%m-%d")
+        # datetime.strptime(str(to_dttm), "%Y-%m-%d")
+        # datetime.strptime(str(inner_from_dttm), "%Y-%m-%d")
+        # datetime.strptime(str(inner_to_dttm), "%Y-%m-%d")
+
         template_kwargs = {
             'from_dttm': from_dttm,
             'groupby': groupby,

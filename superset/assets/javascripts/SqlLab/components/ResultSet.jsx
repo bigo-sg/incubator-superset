@@ -99,7 +99,7 @@ export default class ResultSet extends React.PureComponent {
         );
       }
       let copyButton;
-      if (clipboard) {
+      if (clipboard && this.resultTable) {
         const html = this.copyResultData();
         copyButton = (
           <CopyToClipboard
@@ -203,7 +203,7 @@ export default class ResultSet extends React.PureComponent {
 
   copyResultData() {
     const {data} = this.getResultData();
-    if (data && data.length > 0 && this.resultTable) {
+    if (data && data.length > 0) {
       return this.resultTable;
     }
     return null;

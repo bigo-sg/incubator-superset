@@ -7,7 +7,6 @@ import shortid from 'shortid';
 import VisualizeModal from './VisualizeModal';
 import HighlightedSql from './HighlightedSql';
 import QueryStateLabel from './QueryStateLabel';
-import CopyToClipboard from "../../components/CopyToClipboard";
 import {t} from '../../locales';
 
 const propTypes = {
@@ -218,19 +217,6 @@ export default class ResultSet extends React.PureComponent {
     }
   }
 
-  getResultData() {
-      const query = this.props.query;
-      const results = query.results;
-      let data;
-      if (this.props.cache && query.cached) {
-        data = this.state.data;
-      } else if (results && results.data) {
-        data = results.data;
-      }
-      const columns = results.columns.map(col => col.name);
-      return {data, columns};
-  }
-
   copyResultData() {
     const selection = document.getSelection();
     selection.removeAllRanges();
@@ -284,8 +270,15 @@ export default class ResultSet extends React.PureComponent {
           </Alert>
         </div>);
     } else if (query.state === 'success') {
-      const {data, columns} = this.getResultData();
+      const results = query.results;
+      let data;
+      if (this.props.cache && query.cached) {
+        data = this.state.data;
+      } else if (results && results.data) {
+        data = results.data;
+      }
       if (data && data.length > 0) {
+        const columns = results.columns.map(col => col.name);
         return (
           <div>
             <VisualizeModal

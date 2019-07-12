@@ -278,7 +278,7 @@ export default class ResultSet extends React.PureComponent {
         data = results.data;
       }
       if (data && data.length > 0) {
-        const columns = results.columns.map(col => col.name);
+        const columns = results.columns ? results.columns.map(col => col.name) : [];
         return (
           <div>
             <VisualizeModal

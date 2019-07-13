@@ -730,9 +730,11 @@ class DruidDatasource(Model, BaseDatasource):
         # we need to set this interval to more than 1 day ago to exclude
         # realtime segments, which triggered a bug (fixed in druid 0.8.2).
         # https://groups.google.com/forum/#!topic/druid-user/gVCqqspHqOQ
-        lbound = (max_time - timedelta(days=7)).isoformat()
+        # lbound = (max_time - timedelta(days=7)).isoformat()
+        lbound = (max_time - timedelta(days=1)).isoformat()
         if not self.version_higher(self.cluster.druid_version, '0.8.2'):
-            rbound = (max_time - timedelta(1)).isoformat()
+            # rbound = (max_time - timedelta(1)).isoformat()
+            rbound = max_time.isoformat()
         else:
             rbound = max_time.isoformat()
         segment_metadata = None

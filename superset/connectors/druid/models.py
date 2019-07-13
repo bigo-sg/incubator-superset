@@ -1221,7 +1221,12 @@ class DruidDatasource(Model, BaseDatasource):
         generate_aggs={}
         for aggName in to_generate_agg:
             new_agg = {}
-            new_agg['type'] = 'longSum'
+            if re.match(".*_hll$", aggName) is not None:
+                new_agg['type'] = 'HLLSketchMerge'
+            elif re.match(".*_theta$", aggName) is not None:
+                new_agg['type'] = 'thetaSketch'
+            else:
+                new_agg['type'] = 'longSum'
             new_agg['name'] = aggName
             new_agg['fieldName'] = aggName
             generate_aggs[aggName] = new_agg

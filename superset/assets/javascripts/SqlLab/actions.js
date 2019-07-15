@@ -155,14 +155,14 @@ export function runQuery(query) {
             msg = err.responseText;
           }
         }
-        if (msg === null) {
+        if (msg === null || msg === undefined) {
           if (errorThrown) {
             msg = `[${textStatus}] ${errorThrown}`;
           } else {
             msg = t('Unknown error');
           }
         }
-        if (msg.indexOf('CSRF token') > 0) {
+        if (msg && msg.indexOf('CSRF token') > 0) {
           msg = t('Your session timed out, please refresh your page and try again.');
         }
         dispatch(queryFailed(query, msg));

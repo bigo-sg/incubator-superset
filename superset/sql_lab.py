@@ -163,6 +163,7 @@ def execute_sql(
     # Limit enforced only for retrieving the data, not for the CTA queries.
     superset_query = SupersetQuery(query.sql)
     executed_sql = superset_query.stripped()
+
     if not superset_query.is_select() and not database.allow_dml:
         return handle_error(
             'Only `SELECT` statements are allowed against this database')
@@ -193,6 +194,7 @@ def execute_sql(
         msg = 'Template rendering failed: ' + utils.error_msg_from_exception(e)
         return handle_error(msg)
 
+    # sql_new = executed_sql.replace(" 00:00:00", "")
     query.executed_sql = executed_sql
     query.status = QueryStatus.RUNNING
     query.start_running_time = utils.now_as_float()
@@ -211,7 +213,7 @@ def execute_sql(
         logging.info('Running query: \n{}'.format(executed_sql))
         logging.info(query.executed_sql)
         cursor.execute(query.executed_sql,
-                       **db_engine_spec.cursor_execute_kwargs)
+                       **db_engine_spec.cursor_execute_kwargs, sql_type=query.sql_type)
         logging.info('Handling cursor')
         db_engine_spec.handle_cursor(cursor, query, session)
         logging.info('Fetching data: {}'.format(query.to_dict()))
@@ -281,6 +283,5 @@ def execute_sql(
 
     session.merge(query)
     session.commit()
-
     if return_results:
         return payload

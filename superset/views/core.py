@@ -2306,6 +2306,8 @@ class Superset(BaseSupersetView):
         """Runs arbitrary sql and returns and json"""
         async = request.form.get('runAsync') == 'true'
         sql = request.form.get('sql')
+        sql_type = request.form.get('sql_type')
+        # sql_type = 'presto'
         database_id = request.form.get('database_id')
         schema = request.form.get('schema') or None
         template_params = json.loads(
@@ -2345,6 +2347,7 @@ class Superset(BaseSupersetView):
             tmp_table_name=tmp_table_name,
             user_id=int(g.user.get_id()),
             client_id=request.form.get('client_id'),
+            sql_type=sql_type,
         )
         session.add(query)
         session.flush()

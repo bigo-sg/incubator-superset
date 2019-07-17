@@ -78,8 +78,8 @@ class Cursor(common.DBAPICursor):
     visible by other cursors or connections.
     """
 
-    def __init__(self, host, port='8080', username=None, catalog='hive',
-                 schema='default', poll_interval=1, source='superset_production', session_props=None,
+    def __init__(self, host, port='8080', username=None, sql_type=None, catalog='hive',
+                 schema='default', poll_interval=1, source='superset_test', session_props=None,
                  protocol='http', password=None, requests_session=None, requests_kwargs=None):
         """
         :param host: hostname to connect to, e.g. ``presto.example.com``
@@ -112,6 +112,7 @@ class Cursor(common.DBAPICursor):
         self._poll_interval = poll_interval
         self._source = source
         self._session_props = session_props if session_props is not None else {}
+        self.sql_type = sql_type
 
         if protocol not in ('http', 'https'):
             raise ValueError("Protocol must be http/https, was {!r}".format(protocol))
@@ -169,7 +170,7 @@ class Cursor(common.DBAPICursor):
             for col in self._columns
         ]
 
-    def execute(self, operation, parameters=None):
+    def execute(self, operation, parameters=None, sql_type=None):
         """Prepare and execute a database operation (query or command).
 
         Return values are not defined.
@@ -179,6 +180,7 @@ class Cursor(common.DBAPICursor):
             'X-Presto-Schema': self._schema,
             'X-Presto-Source': self._source,
             'X-Presto-User': self._username,
+            'X-Presto-Client-Tags': sql_type,
         }
 
         if self._session_props:

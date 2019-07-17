@@ -39,6 +39,7 @@ class Query(Model):
     tab_name = Column(String(256))
     sql_editor_id = Column(String(256))
     schema = Column(String(256))
+    sql_type = Column(String(256))
     sql = Column(Text)
     # Query to retrieve the results,
     # used only in case of select_as_cta_used is true.
@@ -112,6 +113,7 @@ class Query(Model):
             'limit_reached': self.limit_reached,
             'resultsKey': self.results_key,
             'trackingUrl': self.tracking_url,
+            'sql_type': self.sql_type
         }
 
     @property

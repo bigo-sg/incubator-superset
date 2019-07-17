@@ -12,6 +12,7 @@ import {
   Row,
   Tooltip,
   Collapse,
+  ButtonGroup
 } from 'react-bootstrap';
 import SplitPane from 'react-split-pane';
 
@@ -22,9 +23,9 @@ import SaveQuery from './SaveQuery';
 import Timer from '../../components/Timer';
 import SqlEditorLeftBar from './SqlEditorLeftBar';
 import AceEditorWrapper from './AceEditorWrapper';
-import { STATE_BSSTYLE_MAP } from '../constants';
+import {STATE_BSSTYLE_MAP} from '../constants';
 import RunQueryActionButton from './RunQueryActionButton';
-import { t } from '../../locales';
+import {t} from '../../locales';
 
 
 const propTypes = {
@@ -45,7 +46,6 @@ const defaultProps = {
   hideLeftBar: false,
 };
 
-
 class SqlEditor extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -57,23 +57,27 @@ class SqlEditor extends React.PureComponent {
     this.onResize = this.onResize.bind(this);
     this.throttledResize = throttle(this.onResize, 250);
   }
+
   componentWillMount() {
     if (this.state.autorun) {
-      this.setState({ autorun: false });
+      this.setState({autorun: false});
       this.props.actions.queryEditorSetAutorun(this.props.queryEditor, false);
       this.startQuery();
     }
   }
+
   componentDidMount() {
     this.onResize();
     window.addEventListener('resize', this.throttledResize);
   }
+
   componentWillUnmount() {
     window.removeEventListener('resize', this.throttledResize);
   }
+
   onResize() {
     const height = this.sqlEditorHeight();
-    const editorPaneHeight = this.props.queryEditor.height || 200;
+    const editorPaneHeight = this.props.queryEditor.height || 400;
     const splitPaneHandlerHeight = 15;
     this.setState({
       editorPaneHeight,
@@ -85,9 +89,15 @@ class SqlEditor extends React.PureComponent {
       this.props.actions.persistEditorHeight(this.props.queryEditor, this.refs.ace.clientHeight);
     }
   }
+
   setQueryEditorSql(sql) {
     this.props.actions.queryEditorSetSql(this.props.queryEditor, sql);
   }
+
+  setQueryEditorSqlType(sqlType) {
+    this.props.actions.queryEditorSetSqlType(this.props.queryEditor, sqlType);
+  }
+
   runQuery(runAsync = false) {
     if (!this.props.queryEditor.sql) {
       return;
@@ -98,6 +108,7 @@ class SqlEditor extends React.PureComponent {
     }
     this.startQuery(effectiveRunAsync);
   }
+
   startQuery(runAsync = false, ctas = false) {
     const qe = this.props.queryEditor;
     const query = {
@@ -108,25 +119,52 @@ class SqlEditor extends React.PureComponent {
       schema: qe.schema,
       tempTableName: ctas ? this.state.ctas : '',
       templateParams: qe.templateParams,
+      sql_type: qe.sql_type,
       runAsync,
       ctas,
     };
     this.props.actions.runQuery(query);
     this.props.actions.setActiveSouthPaneTab('Results');
   }
+
   stopQuery() {
     this.props.actions.postStopQuery(this.props.latestQuery);
   }
+
   createTableAs() {
     this.startQuery(true, true);
   }
+
   ctasChanged(event) {
-    this.setState({ ctas: event.target.value });
+    this.setState({ctas: event.target.value});
   }
+
   sqlEditorHeight() {
     const horizontalScrollbarHeight = 25;
     return parseInt(this.props.getHeight(), 10) - horizontalScrollbarHeight;
   }
+
+  renderEditorSqlTypeBar() {
+    const qe = this.props.queryEditor;
+    const btnStyle = (type) => {
+      return qe.sql_type === type ? 'primary' : 'default'
+    };
+    const sqlTypeMap = {
+      presto: 'Presto',
+      hive: 'Hive'
+    };
+    return (
+      <div className="sql-type-bar">
+        <span>{t('请选择SQL类型：')}</span>
+        <ButtonGroup>
+          {Object.entries(sqlTypeMap).map(([k, v]) => (
+            <Button key={k} bsStyle={btnStyle(k)} onClick={this.setQueryEditorSqlType.bind(this, k)}>{v}</Button>
+          ))}
+        </ButtonGroup>
+      </div>
+    )
+  }
+
   renderEditorBottomBar() {
     let ctasControls;
     if (this.props.database && this.props.database.allow_ctas) {
@@ -148,7 +186,7 @@ class SqlEditor extends React.PureComponent {
                 onClick={this.createTableAs.bind(this)}
                 tooltip={ctasToolTip}
               >
-                <i className="fa fa-table" /> CTAS
+                <i className="fa fa-table"/> CTAS
               </Button>
             </InputGroup.Button>
           </InputGroup>
@@ -208,20 +246,21 @@ class SqlEditor extends React.PureComponent {
           />
           {limitWarning}
           {this.props.latestQuery &&
-            <Timer
-              startTime={this.props.latestQuery.startDttm}
-              endTime={this.props.latestQuery.endDttm}
-              state={STATE_BSSTYLE_MAP[this.props.latestQuery.state]}
-              isRunning={this.props.latestQuery.state === 'running'}
-            />
+          <Timer
+            startTime={this.props.latestQuery.startDttm}
+            endTime={this.props.latestQuery.endDttm}
+            state={STATE_BSSTYLE_MAP[this.props.latestQuery.state]}
+            isRunning={this.props.latestQuery.state === 'running'}
+          />
           }
         </div>
       </div>
     );
   }
+
   render() {
     const height = this.sqlEditorHeight();
-    const defaultNorthHeight = this.props.queryEditor.height || 200;
+    const defaultNorthHeight = this.props.queryEditor.height || 300;
     return (
       <div
         className="SqlEditor"
@@ -252,7 +291,7 @@ class SqlEditor extends React.PureComponent {
             sm={this.props.hideLeftBar ? 12 : 7}
             md={this.props.hideLeftBar ? 12 : 8}
             lg={this.props.hideLeftBar ? 12 : 9}
-            style={{ height: this.state.height }}
+            style={{height: this.state.height}}
           >
             <SplitPane
               split="horizontal"
@@ -260,8 +299,9 @@ class SqlEditor extends React.PureComponent {
               minSize={100}
               onChange={this.onResize}
             >
-              <div ref="ace" style={{ width: '100%' }}>
+              <div ref="ace" style={{width: '100%'}}>
                 <div>
+                  {this.renderEditorSqlTypeBar()}
                   <AceEditorWrapper
                     actions={this.props.actions}
                     onBlur={this.setQueryEditorSql.bind(this)}
@@ -269,7 +309,7 @@ class SqlEditor extends React.PureComponent {
                     onAltEnter={this.runQuery.bind(this)}
                     sql={this.props.queryEditor.sql}
                     tables={this.props.tables}
-                    height={((this.state.editorPaneHeight || defaultNorthHeight) - 50) + 'px'}
+                    height={((this.state.editorPaneHeight || defaultNorthHeight) - 95) + 'px'}
                   />
                   {this.renderEditorBottomBar()}
                 </div>
@@ -289,6 +329,7 @@ class SqlEditor extends React.PureComponent {
     );
   }
 }
+
 SqlEditor.defaultProps = defaultProps;
 SqlEditor.propTypes = propTypes;
 

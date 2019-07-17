@@ -10,6 +10,7 @@ export function getInitialState(defaultDbId) {
     id: shortid.generate(),
     title: t('Untitled Query'),
     sql: 'SELECT *\nFROM\nWHERE',
+    sql_type: 'presto',
     selectedText: null,
     latestQueryId: null,
     autorun: false,
@@ -217,6 +218,11 @@ export const sqlLabReducer = function (state, action) {
     [actions.QUERY_EDITOR_SET_SELECTED_TEXT]() {
       return alterInArr(state, 'queryEditors', action.queryEditor, { selectedText: action.sql });
     },
+
+    [actions.QUERY_EDITOR_SET_SQL_TYPE]() {
+      return alterInArr(state, 'queryEditors', action.queryEditor, { sql_type: action.sql_type });
+    },
+
     [actions.QUERY_EDITOR_SET_AUTORUN]() {
       return alterInArr(state, 'queryEditors', action.queryEditor, { autorun: action.autorun });
     },

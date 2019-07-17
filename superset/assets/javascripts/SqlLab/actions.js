@@ -22,6 +22,7 @@ export const QUERY_EDITOR_SET_AUTORUN = 'QUERY_EDITOR_SET_AUTORUN';
 export const QUERY_EDITOR_SET_SQL = 'QUERY_EDITOR_SET_SQL';
 export const QUERY_EDITOR_SET_TEMPLATE_PARAMS = 'QUERY_EDITOR_SET_TEMPLATE_PARAMS';
 export const QUERY_EDITOR_SET_SELECTED_TEXT = 'QUERY_EDITOR_SET_SELECTED_TEXT';
+export const QUERY_EDITOR_SET_SQL_TYPE = 'QUERY_EDITOR_SET_SQL_TYPE';
 export const QUERY_EDITOR_PERSIST_HEIGHT = 'QUERY_EDITOR_PERSIST_HEIGHT';
 
 export const SET_DATABASES = 'SET_DATABASES';
@@ -129,6 +130,7 @@ export function runQuery(query) {
       runAsync: query.runAsync,
       schema: query.schema,
       sql: query.sql,
+      sql_type: query.sql_type,
       sql_editor_id: query.sqlEditorId,
       tab: query.tab,
       tmp_table_name: query.tempTableName,
@@ -256,6 +258,10 @@ export function queryEditorSetTemplateParams(queryEditor, templateParams) {
 
 export function queryEditorSetSelectedText(queryEditor, sql) {
   return { type: QUERY_EDITOR_SET_SELECTED_TEXT, queryEditor, sql };
+}
+
+export function queryEditorSetSqlType(queryEditor, sql_type) {
+  return { type: QUERY_EDITOR_SET_SQL_TYPE, queryEditor, sql_type };
 }
 
 export function mergeTable(table, query) {

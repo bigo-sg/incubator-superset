@@ -1970,7 +1970,7 @@ export const controls = {
         label: t('Retain Interval'),
         isInt: true,
         default: 1,
-        description: t('添加多日留存时间'),
+        description: t('多日留存天数'),
     },
 
     retain_field: {

@@ -92,10 +92,10 @@ export const sections = {
     ],
     retention: [
          {
-            label: t('Retain Field'),
+            label: t('Retain Options'),
             expanded: true,
             description: t('目标计算事件——用于留存分析'),
-            controlSetRows: [['retain_field']],
+            controlSetRows: [['retain_interval', 'retain_field']],
             controlDependence: {'is_retention': true},
         },
         {

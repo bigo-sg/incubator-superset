@@ -380,6 +380,7 @@ export function popStoredQuery(urlId) {
           schema: newQuery.schema ? newQuery.schema : null,
           autorun: newQuery.autorun ? newQuery.autorun : false,
           sql: newQuery.sql ? newQuery.sql : 'SELECT ...',
+          sql_type: newQuery.sql_type || 'presto',
         };
         dispatch(addQueryEditor(queryEditorProps));
       },
@@ -400,6 +401,7 @@ export function popSavedQuery(saveQueryId) {
           schema: sq.schema,
           autorun: false,
           sql: sq.sql,
+          sql_type: sq.sql_type || 'presto',
         };
         dispatch(addQueryEditor(queryEditorProps));
       },

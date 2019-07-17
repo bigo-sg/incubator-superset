@@ -43,12 +43,13 @@ class QueryTable extends React.PureComponent {
   callback(url) {
     window.open(url);
   }
-  openQuery(dbId, schema, sql) {
+  openQuery(dbId, schema, sql, sql_type) {
     const newQuery = {
       dbId,
       title: t('Untitled Query'),
       schema,
       sql,
+      sql_type
     };
     storeQuery(newQuery, this.callback);
   }
@@ -109,7 +110,7 @@ class QueryTable extends React.PureComponent {
         <div style={{ width: '100px' }}>
           <button
             className="btn btn-link btn-xs"
-            onClick={this.openQuery.bind(this, q.dbId, q.schema, q.sql)}
+            onClick={this.openQuery.bind(this, q.dbId, q.schema, q.sql, q.sql_type)}
           >
             <i className="fa fa-external-link" />{t('Open in SQL Editor')}
           </button>
@@ -119,6 +120,13 @@ class QueryTable extends React.PureComponent {
         <Well>
           <HighlightedSql sql={q.sql} rawSql={q.executedSql} shrink maxWidth={60} />
         </Well>
+      );
+      q.sqltype = (
+        <div>
+          <span>
+            {q.sql_type}
+          </span>
+        </div>
       );
       if (q.resultsKey) {
         q.output = (

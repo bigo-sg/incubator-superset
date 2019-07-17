@@ -40,7 +40,7 @@ class TabbedSqlEditors extends React.PureComponent {
   }
   componentDidMount() {
     const query = URI(window.location).search(true);
-    if (query.id || query.sql || query.savedQueryId) {
+    if (query.id || query.sql || query.savedQueryId || query.sql_type) {
       if (query.id) {
         this.props.actions.popStoredQuery(query.id);
       } else if (query.savedQueryId) {
@@ -66,6 +66,7 @@ class TabbedSqlEditors extends React.PureComponent {
           schema: query.schema,
           autorun: query.autorun,
           sql: query.sql,
+          sql_type: query.sql_type
         };
         this.props.actions.addQueryEditor(newQueryEditor);
       }
@@ -127,6 +128,7 @@ class TabbedSqlEditors extends React.PureComponent {
         this.props.defaultDbId,
       schema: (activeQueryEditor) ? activeQueryEditor.schema : null,
       autorun: false,
+      sql_type: 'presto',
       sql: 'SELECT ...',
     };
     this.props.actions.addQueryEditor(qe);

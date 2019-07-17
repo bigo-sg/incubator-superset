@@ -1965,6 +1965,14 @@ export const controls = {
         default: false,
     },
 
+    retain_interval: {
+        type: 'TextControl',
+        label: t('Retain Interval'),
+        isInt: true,
+        default: 1,
+        description: t('添加多日留存时间'),
+    },
+
     retain_field: {
         type: 'SelectControl',
         label: t('Retain Field'),

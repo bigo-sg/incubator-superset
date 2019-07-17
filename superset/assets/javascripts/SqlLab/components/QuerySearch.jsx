@@ -201,7 +201,7 @@ class QuerySearch extends React.PureComponent {
                 <QueryTable
                   columns={[
                     'state', 'db', 'user', 'time',
-                    'progress', 'rows', 'sql', 'querylink',
+                    'progress', 'rows', 'sqltype', 'sql', 'querylink',
                   ]}
                   onUserClicked={this.onUserClicked.bind(this)}
                   onDbClicked={this.onDbClicked.bind(this)}

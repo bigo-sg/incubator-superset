@@ -867,7 +867,7 @@ export const controls = {
         freeForm: true,
         label: t('Row limit'),
         validators: [v.integer],
-        default: 50000,
+        default: 1000,
         choices: formatSelectOptions(ROW_LIMIT_OPTIONS),
     },
 

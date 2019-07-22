@@ -301,7 +301,7 @@ class SqlEditor extends React.PureComponent {
             >
               <div ref="ace" style={{width: '100%'}}>
                 <div>
-                  {this.renderEditorSqlTypeBar()}
+                  {/*{this.renderEditorSqlTypeBar()}*/}
                   <AceEditorWrapper
                     actions={this.props.actions}
                     onBlur={this.setQueryEditorSql.bind(this)}

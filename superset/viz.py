@@ -152,7 +152,8 @@ class BaseViz(object):
         cols_new = list()
         for col in df.columns:
             if re.match(".*_dim$", col) is not None:
-                cols_new.append(col[:-4])
+                # cols_new.append(col[:-4])
+                cols_new.append(col)
             else:
                 cols_new.append(col)
         df.columns = cols_new
@@ -244,6 +245,7 @@ class BaseViz(object):
         filters_initial = form_data.get('filters_initial', [])
         filters_follow = form_data.get('filters_follow', [])
         retain_field = form_data.get('retain_field')
+        retain_interval = form_data.get('retain_interval')
         d = {
             'granularity': granularity,
             'from_dttm': from_dttm,
@@ -263,6 +265,7 @@ class BaseViz(object):
             'filters_initial': filters_initial,
             'filters_follow': filters_follow,
             'retain_field': retain_field,
+            'retain_interval': retain_interval,
         }
         return d
 

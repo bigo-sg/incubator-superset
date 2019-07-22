@@ -1175,6 +1175,7 @@ class DruidDatasource(Model, BaseDatasource):
             filters_follow=None,
             is_retention=False,
             retain_field=None,
+            retain_interval=None,
         ):
         """Runs a query against Druid and returns a dataframe.
         """
@@ -1185,7 +1186,7 @@ class DruidDatasource(Model, BaseDatasource):
         to_dttm_flag = to_dttm
         if is_retention:
             to_dttm_tmp = datetime.strftime(to_dttm, "%Y-%m-%d")
-            to_dttm = datetime.strptime(to_dttm_tmp, "%Y-%m-%d") + timedelta(days=1)
+            to_dttm = datetime.strptime(to_dttm_tmp, "%Y-%m-%d") + timedelta(days=retain_interval)
 
         filters_initial = DruidDatasource.get_filters(filters_initial, self.num_cols)
         filters_follow = DruidDatasource.get_filters(filters_follow, self.num_cols)
@@ -1268,21 +1269,22 @@ class DruidDatasource(Model, BaseDatasource):
             day_begin = datetime.strptime(tmp, "%Y-%m-%d")
             while day_begin < to_dttm_flag:
                 day_start = datetime.strftime(day_begin, "%Y-%m-%d")
-                day_begin = day_begin + timedelta(days=1)
-                day_end = datetime.strftime(day_begin, "%Y-%m-%d")
+                day_end = datetime.strftime(day_begin + timedelta(days=1), "%Y-%m-%d")
                 interval = day_start + "/" + day_end
 
+                day_start_2 = datetime.strftime(day_begin + timedelta(days=retain_interval), "%Y-%m-%d")
+                day_end_2 = datetime.strftime(day_begin + timedelta(days=retain_interval+1), "%Y-%m-%d")
+                interval_2 = day_start_2 + "/" + day_end_2
+
                 filed_name1 = "dau_"+day_start+"_initial"
-                filed_name2 = "dau_"+day_end+"_follow"
+                filed_name2 = "dau_"+day_start_2+"_follow"
                 filed_name_retain = "retain_dau_" + day_start
                 filed_name_retain_rate = "retain_rate_" + day_start
 
                 agg_initial = self.generate_aggregations(retain_field, filed_name1, interval, filters_initial)
-
-                day_begin_2 = day_begin + timedelta(days=1)
-                day_end_2 = datetime.strftime(day_begin_2, "%Y-%m-%d")
-                interval_2 = day_end + "/" + day_end_2
                 agg_follow = self.generate_aggregations(retain_field, filed_name2, interval_2, filters_follow)
+
+                day_begin = day_begin + timedelta(days=1)
 
                 qry["aggregations"][filed_name1] = agg_initial
                 qry["aggregations"][filed_name2] = agg_follow

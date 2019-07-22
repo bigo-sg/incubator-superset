@@ -452,6 +452,7 @@ class SqlaTable(Model, BaseDatasource):
             prequeries=None,
             is_prequery=False,
             retain_field=None,
+            retain_interval=1,
             is_retention=False,
             filters_initial=None,
             filters_follow=None,

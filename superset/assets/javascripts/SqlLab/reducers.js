@@ -47,6 +47,7 @@ export const sqlLabReducer = function (state, action) {
         schema: (action.query.schema) ? action.query.schema : null,
         autorun: true,
         sql: action.query.sql,
+        sql_type: action.query.sql_type
       };
 
       return sqlLabReducer(state, actions.addQueryEditor(qe));

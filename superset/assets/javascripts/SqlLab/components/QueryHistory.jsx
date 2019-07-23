@@ -16,7 +16,7 @@ const QueryHistory = (props) => {
       <QueryTable
         columns={[
           'state', 'started', 'duration', 'progress',
-          'rows', 'sql', 'output', 'actions',
+          'rows', 'sql', 'sqltype', 'output', 'actions',
         ]}
         queries={props.queries}
         actions={props.actions}

@@ -77,7 +77,7 @@ class SqlEditor extends React.PureComponent {
 
   onResize() {
     const height = this.sqlEditorHeight();
-    const editorPaneHeight = this.props.queryEditor.height || 400;
+    const editorPaneHeight = this.props.queryEditor.height || 300;
     const splitPaneHandlerHeight = 15;
     this.setState({
       editorPaneHeight,
@@ -301,7 +301,7 @@ class SqlEditor extends React.PureComponent {
             >
               <div ref="ace" style={{width: '100%'}}>
                 <div>
-                  {/*{this.renderEditorSqlTypeBar()}*/}
+                  {this.renderEditorSqlTypeBar()}
                   <AceEditorWrapper
                     actions={this.props.actions}
                     onBlur={this.setQueryEditorSql.bind(this)}
@@ -309,7 +309,7 @@ class SqlEditor extends React.PureComponent {
                     onAltEnter={this.runQuery.bind(this)}
                     sql={this.props.queryEditor.sql}
                     tables={this.props.tables}
-                    height={((this.state.editorPaneHeight || defaultNorthHeight) - 95) + 'px'}
+                    height={((this.state.editorPaneHeight || defaultNorthHeight) - 100) + 'px'}
                   />
                   {this.renderEditorBottomBar()}
                 </div>

@@ -75,9 +75,9 @@ class SqlEditor extends React.PureComponent {
     window.removeEventListener('resize', this.throttledResize);
   }
 
-  onResize() {
+  onResize(size) {
     const height = this.sqlEditorHeight();
-    const editorPaneHeight = this.props.queryEditor.height || 300;
+    const editorPaneHeight = size || this.props.queryEditor.height || 300;
     const splitPaneHandlerHeight = 15;
     this.setState({
       editorPaneHeight,
@@ -85,8 +85,8 @@ class SqlEditor extends React.PureComponent {
       height,
     });
 
-    if (this.refs.ace.clientHeight) {
-      this.props.actions.persistEditorHeight(this.props.queryEditor, this.refs.ace.clientHeight);
+    if (size) {
+      this.props.actions.persistEditorHeight(this.props.queryEditor, size);
     }
   }
 
@@ -140,8 +140,7 @@ class SqlEditor extends React.PureComponent {
   }
 
   sqlEditorHeight() {
-    const horizontalScrollbarHeight = 25;
-    return parseInt(this.props.getHeight(), 10) - horizontalScrollbarHeight;
+    return parseInt(this.props.getHeight(), 10);
   }
 
   renderEditorSqlTypeBar() {
@@ -299,7 +298,7 @@ class SqlEditor extends React.PureComponent {
               minSize={100}
               onChange={this.onResize}
             >
-              <div ref="ace" style={{width: '100%'}}>
+              <div style={{width: '100%', height: this.state.editorPaneHeight || defaultNorthHeight}}>
                 <div>
                   {this.renderEditorSqlTypeBar()}
                   <AceEditorWrapper

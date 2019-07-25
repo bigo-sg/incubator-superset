@@ -72,7 +72,7 @@ class SouthPane extends React.PureComponent {
     ));
 
     return (
-      <div className="SouthPane">
+      <div className="SouthPane" style={{height: props.height}}>
         <Tabs
           bsStyle="tabs"
           id={shortid.generate()}

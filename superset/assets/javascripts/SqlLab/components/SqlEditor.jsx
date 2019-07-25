@@ -79,7 +79,7 @@ class SqlEditor extends React.PureComponent {
     const height = this.sqlEditorHeight();
     let editorPaneHeight = this.props.queryEditor.height || 300;
     const splitPaneHandlerHeight = 15;
-    if (!isNaN(Number(size))) {
+    if (size && !isNaN(Number(size))) {
       editorPaneHeight = size;
     }
 

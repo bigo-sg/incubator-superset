@@ -77,17 +77,21 @@ class SqlEditor extends React.PureComponent {
 
   onResize(size) {
     const height = this.sqlEditorHeight();
-    const editorPaneHeight = size || this.props.queryEditor.height || 300;
+    let editorPaneHeight = this.props.queryEditor.height || 300;
     const splitPaneHandlerHeight = 15;
+    if (!isNaN(Number(size))) {
+      editorPaneHeight = size;
+    }
+
     this.setState({
       editorPaneHeight,
       southPaneHeight: height - editorPaneHeight - splitPaneHandlerHeight,
       height,
     });
 
-    if (size) {
+     if (size && !isNaN(Number(size))) {
       this.props.actions.persistEditorHeight(this.props.queryEditor, size);
-    }
+     }
   }
 
   setQueryEditorSql(sql) {
@@ -140,7 +144,7 @@ class SqlEditor extends React.PureComponent {
   }
 
   sqlEditorHeight() {
-    const horizontalScrollbarHeight = 25;
+    const horizontalScrollbarHeight = 5;
     return parseInt(this.props.getHeight(), 10) - horizontalScrollbarHeight;
   }
 

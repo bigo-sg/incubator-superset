@@ -55,7 +55,7 @@ class SqlEditor extends React.PureComponent {
     };
 
     this.onResize = this.onResize.bind(this);
-    this.throttledResize = throttle(this.onResize, 250);
+    this.throttledResize = throttle(this.onResize, 100);
   }
 
   componentWillMount() {
@@ -140,7 +140,8 @@ class SqlEditor extends React.PureComponent {
   }
 
   sqlEditorHeight() {
-    return parseInt(this.props.getHeight(), 10);
+    const horizontalScrollbarHeight = 25;
+    return parseInt(this.props.getHeight(), 10) - horizontalScrollbarHeight;
   }
 
   renderEditorSqlTypeBar() {

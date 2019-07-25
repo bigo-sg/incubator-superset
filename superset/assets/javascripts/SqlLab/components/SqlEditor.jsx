@@ -144,7 +144,7 @@ class SqlEditor extends React.PureComponent {
   }
 
   sqlEditorHeight() {
-    const horizontalScrollbarHeight = 5;
+    const horizontalScrollbarHeight = 25;
     return parseInt(this.props.getHeight(), 10) - horizontalScrollbarHeight;
   }
 

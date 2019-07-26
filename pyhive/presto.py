@@ -79,7 +79,7 @@ class Cursor(common.DBAPICursor):
     """
 
     def __init__(self, host, port='8080', username=None, sql_type=None, catalog='hive',
-                 schema='default', poll_interval=1, source='superset_test', session_props=None,
+                 schema='default', poll_interval=1, source='superset_production', session_props=None,
                  protocol='http', password=None, requests_session=None, requests_kwargs=None):
         """
         :param host: hostname to connect to, e.g. ``presto.example.com``
@@ -170,17 +170,25 @@ class Cursor(common.DBAPICursor):
             for col in self._columns
         ]
 
-    def execute(self, operation, parameters=None, sql_type=None):
+    def execute(self, operation, sql_type=None, parameters=None):
         """Prepare and execute a database operation (query or command).
 
         Return values are not defined.
         """
+        if sql_type == "hive":
+            client_tag = "hive"
+            enable_hive_syntax = "enable_hive_syntax=true"
+        else:
+            client_tag = "presto"
+            enable_hive_syntax = "enable_hive_syntax=false"
+
         headers = {
             'X-Presto-Catalog': self._catalog,
             'X-Presto-Schema': self._schema,
             'X-Presto-Source': self._source,
             'X-Presto-User': self._username,
-            'X-Presto-Client-Tags': sql_type,
+            # 'X-Presto-Client-Tags': client_tag,
+            'X-Presto-Session': enable_hive_syntax,
         }
 
         if self._session_props:

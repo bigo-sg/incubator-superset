@@ -29,7 +29,6 @@ import sqlalchemy as sqla
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.exc import IntegrityError
-from unidecode import unidecode
 from werkzeug.routing import BaseConverter
 from werkzeug.utils import secure_filename
 
@@ -2307,7 +2306,8 @@ class Superset(BaseSupersetView):
         async = request.form.get('runAsync') == 'true'
         sql = request.form.get('sql')
         sql_type = request.form.get('sql_type')
-        # sql_type = 'presto'
+        if sql_type is None:
+            sql_type = 'presto'
         database_id = request.form.get('database_id')
         schema = request.form.get('schema') or None
         template_params = json.loads(
@@ -2445,7 +2445,7 @@ class Superset(BaseSupersetView):
             csv = df.to_csv(index=False, **config.get('CSV_EXPORT'))
         response = Response(csv, mimetype='text/csv')
         response.headers['Content-Disposition'] = (
-            'attachment; filename={}.csv'.format(unidecode(query.name)))
+            'attachment; filename={}.csv'.format(query.name))
         logging.info('Ready to return response')
         return response
 

@@ -26,7 +26,7 @@ from superset.utils import get_celery_app, QueryStatus
 config = app.config
 celery_app = get_celery_app(config)
 stats_logger = app.config.get('STATS_LOGGER')
-SQLLAB_TIMEOUT = config.get('SQLLAB_ASYNC_TIME_LIMIT_SEC', 600)
+SQLLAB_TIMEOUT = config.get('SQLLAB_ASYNC_TIME_LIMIT_SEC', 1800)
 
 
 class SqlLabException(Exception):
@@ -172,7 +172,6 @@ def execute_sql(
             return handle_error(
                 'Only `SELECT` statements can be used with the CREATE TABLE '
                 'feature.')
-            return
         if not query.tmp_table_name:
             start_dttm = datetime.fromtimestamp(query.start_time)
             query.tmp_table_name = 'tmp_{}_table_{}'.format(
@@ -212,8 +211,8 @@ def execute_sql(
         cursor = conn.cursor()
         logging.info('Running query: \n{}'.format(executed_sql))
         logging.info(query.executed_sql)
-        cursor.execute(query.executed_sql,
-                       **db_engine_spec.cursor_execute_kwargs, sql_type=query.sql_type)
+        cursor.execute(query.executed_sql, sql_type=query.sql_type,
+                       **db_engine_spec.cursor_execute_kwargs)
         logging.info('Handling cursor')
         db_engine_spec.handle_cursor(cursor, query, session)
         logging.info('Fetching data: {}'.format(query.to_dict()))

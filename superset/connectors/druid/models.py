@@ -1216,23 +1216,28 @@ class DruidDatasource(Model, BaseDatasource):
             pgg = post_aggs[key]
             if 'fn' not in pgg.post_aggregator:
                 continue
-            if pgg.post_aggregator['fn'] == '/':
-                fields = pgg.post_aggregator['fields']
-                for field in fields:
-                    if str(field['fieldName']) != 'total_sum':
-                        to_generate_agg.append(field['fieldName'])
+            if 'fields' in pgg.post_aggregator:
+                to_generate_agg.append(pgg.post_aggregator['fields'])
         generate_aggs={}
-        for aggName in to_generate_agg:
-            new_agg = {}
-            if re.match(".*_hll$", aggName) is not None:
-                new_agg['type'] = 'HLLSketchMerge'
-            elif re.match(".*_theta$", aggName) is not None:
-                new_agg['type'] = 'thetaSketch'
-            else:
-                new_agg['type'] = 'longSum'
-            new_agg['name'] = aggName
-            new_agg['fieldName'] = aggName
-            generate_aggs[aggName] = new_agg
+        for to_gen in to_generate_agg:
+            for agg in to_gen:
+                if 'fieldName' not in agg:
+                    continue
+                aggName = agg['fieldName']
+                if aggName in generate_aggs:
+                    continue
+                new_agg = {}
+                new_agg['fieldName'] = agg['fieldName']
+                new_agg['name'] = agg['name']
+                new_agg['type'] = agg['type']
+                if re.match(".*_hll$", aggName) is not None:
+                    new_agg['type'] = 'HLLSketchMerge'
+                elif re.match(".*_theta$", aggName) is not None:
+                    new_agg['type'] = 'thetaSketch'
+                else:
+                    if new_agg['type'] == 'fieldAccess' or new_agg['type'] == 'finalizingFieldAccess':
+                        new_agg['type'] = 'doubleSum'
+                generate_aggs[aggName] = new_agg
 
         aggregations = self.get_aggregations(all_metrics)
 

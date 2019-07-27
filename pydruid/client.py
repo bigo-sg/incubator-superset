@@ -23,7 +23,8 @@ from six.moves import urllib
 
 from pydruid.query import QueryBuilder
 from base64 import b64encode
-
+import getpass
+from flask import g, session
 
 # extract error from the <PRE> tag inside the HTML response
 HTML_ERROR = re.compile('<pre>\s*(.*?)\s*</pre>', re.IGNORECASE)
@@ -48,12 +49,20 @@ class BaseDruidClient(object):
         # tmp['query'] = query.query_dict
         # querystr = json.dumps(tmp).encode('utf-8')
         # print(querystr)
-
         if self.url.endswith('/'):
             url = self.url + self.endpoint
         else:
             url = self.url + '/' + self.endpoint
         headers = {'Content-Type': 'application/json'}
+
+        # try:
+        #     if(hasattr(g.user, 'username')):
+        #         headers['User'] = getattr(g.user, 'username')
+        #     else:
+        #         headers['User'] = 'None'
+        # except IOError:
+        #     print("11")
+
         if (self.username is not None) and (self.password is not None):
             authstring = '{}:{}'.format(self.username, self.password)
             b64string = b64encode(authstring.encode()).decode()

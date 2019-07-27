@@ -116,7 +116,7 @@ export default class SelectControl extends React.PureComponent {
       labelKey: 'label',
       valueKey: this.props.valueKey,
       autosize: false,
-      closeOnSelect: false,
+      closeOnSelect: !this.props.multi,
       clearable: this.props.clearable,
       isLoading: this.props.isLoading,
       onChange: this.onChange,

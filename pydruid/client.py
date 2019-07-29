@@ -23,8 +23,7 @@ from six.moves import urllib
 
 from pydruid.query import QueryBuilder
 from base64 import b64encode
-import getpass
-from flask import g, session
+from flask import g
 
 # extract error from the <PRE> tag inside the HTML response
 HTML_ERROR = re.compile('<pre>\s*(.*?)\s*</pre>', re.IGNORECASE)
@@ -35,6 +34,10 @@ class BaseDruidClient(object):
         self.url = url
         self.endpoint = endpoint
         self.query_builder = QueryBuilder()
+        # if g is not None and hasattr(g, 'user') and hasattr(g.user, 'username') and g.user.username is not None:
+        #     print(g)
+        #     self.username = g.user.username
+        # else:
         self.username = None
         self.password = None
 
@@ -44,30 +47,17 @@ class BaseDruidClient(object):
 
     def _prepare_url_headers_and_body(self, query):
         querystr = json.dumps(query.query_dict).encode('utf-8')
-        # tmp = {}
-        # tmp['queryType'] = 'view'
-        # tmp['query'] = query.query_dict
-        # querystr = json.dumps(tmp).encode('utf-8')
-        # print(querystr)
+
         if self.url.endswith('/'):
             url = self.url + self.endpoint
         else:
             url = self.url + '/' + self.endpoint
         headers = {'Content-Type': 'application/json'}
 
-        # try:
-        #     if(hasattr(g.user, 'username')):
-        #         headers['User'] = getattr(g.user, 'username')
-        #     else:
-        #         headers['User'] = 'None'
-        # except IOError:
-        #     print("11")
-
         if (self.username is not None) and (self.password is not None):
             authstring = '{}:{}'.format(self.username, self.password)
             b64string = b64encode(authstring.encode()).decode()
             headers['Authorization'] = 'Basic {}'.format(b64string)
-
         return headers, querystr, url
 
     def _post(self, query):
@@ -499,8 +489,10 @@ class PyDruid(BaseDruidClient):
     def _post(self, query):
         try:
             headers, querystr, url = self._prepare_url_headers_and_body(query)
-            # print(querystr)
-            # print(query.query_dict)
+            qstr = json.loads(str(querystr, encoding="utf-8"))
+            if 'queryType' in qstr and qstr['queryType'] in ['view', 'scan']:
+                if g.user and hasattr(g.user, 'username') and g.user.username is not None:
+                    headers['User'] = g.user.username
             req = urllib.request.Request(url, querystr, headers)
             res = urllib.request.urlopen(req)
             data = res.read().decode("utf-8")

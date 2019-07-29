@@ -504,24 +504,6 @@ class SqlaTable(Model, BaseDatasource):
         select_exprs = []
         groupby_exprs = []
 
-        if groupby:
-            select_exprs = []
-            inner_select_exprs = []
-            inner_groupby_exprs = []
-            for s in groupby:
-                col = cols[s]
-                outer = col.sqla_col
-                inner = col.sqla_col.label(col.column_name + '__')
-
-                groupby_exprs.append(outer)
-                select_exprs.append(outer)
-                inner_groupby_exprs.append(inner)
-                inner_select_exprs.append(inner)
-        elif columns:
-            for s in columns:
-                select_exprs.append(cols[s].sqla_col)
-            metrics_exprs = []
-
         if granularity:
             dttm_col = cols[granularity]
             time_grain = extras.get('time_grain_sqla')
@@ -539,6 +521,24 @@ class SqlaTable(Model, BaseDatasource):
                 time_filters.append(cols[self.main_dttm_col].
                                     get_time_filter(from_dttm, to_dttm))
             time_filters.append(dttm_col.get_time_filter(from_dttm, to_dttm))
+
+        if groupby:
+            # select_exprs = []
+            inner_select_exprs = []
+            inner_groupby_exprs = []
+            for s in groupby:
+                col = cols[s]
+                outer = col.sqla_col
+                inner = col.sqla_col.label(col.column_name + '__')
+
+                groupby_exprs.append(outer)
+                select_exprs.append(outer)
+                inner_groupby_exprs.append(inner)
+                inner_select_exprs.append(inner)
+        elif columns:
+            for s in columns:
+                select_exprs.append(cols[s].sqla_col)
+            metrics_exprs = []
 
         select_exprs += metrics_exprs
         qry = sa.select(select_exprs)

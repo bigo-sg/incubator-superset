@@ -193,7 +193,7 @@ ALLOWED_EXTENSIONS = set(['csv'])
 # CSV Options: key/value pairs that will be passed as argument to DataFrame.to_csv method
 # note: index option should not be overridden
 CSV_EXPORT = {
-    'encoding': 'utf-8',
+    'encoding': 'utf-8-sig',
 }
 
 # ---------------------------------------------------
@@ -246,7 +246,7 @@ BACKUP_COUNT = 30
 MAPBOX_API_KEY = ''
 
 # Maximum number of rows returned in the SQL editor
-SQL_MAX_ROW = 1000000
+SQL_MAX_ROW = 1000
 DISPLAY_SQL_MAX_ROW = 1000
 
 # Maximum number of tables/views displayed in the dropdown window in SQL Lab.
@@ -375,6 +375,8 @@ HIVE_POLL_INTERVAL = 5
 # geospatial ones) by inputing javascript in controls. This exposes
 # an XSS security vulnerability
 ENABLE_JAVASCRIPT_CONTROLS = False
+
+PRESTO_DB_NAME = ['presto_db']
 
 try:
     if CONFIG_PATH_ENV_VAR in os.environ:

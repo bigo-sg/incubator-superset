@@ -28,6 +28,8 @@ celery_app = get_celery_app(config)
 stats_logger = app.config.get('STATS_LOGGER')
 SQLLAB_TIMEOUT = config.get('SQLLAB_ASYNC_TIME_LIMIT_SEC', 1800)
 
+PRESTO_DB_NAME = config.get('PRESTO_DB_NAME')
+
 
 class SqlLabException(Exception):
     pass
@@ -201,6 +203,7 @@ def execute_sql(
     session.commit()
     logging.info("Set query to 'running'")
     conn = None
+
     try:
         engine = database.get_sqla_engine(
             schema=query.schema,
@@ -211,8 +214,13 @@ def execute_sql(
         cursor = conn.cursor()
         logging.info('Running query: \n{}'.format(executed_sql))
         logging.info(query.executed_sql)
-        cursor.execute(query.executed_sql, sql_type=query.sql_type,
-                       **db_engine_spec.cursor_execute_kwargs)
+
+        if str(database) in PRESTO_DB_NAME:
+            cursor.execute(query.executed_sql, sql_type=query.sql_type,
+                           **db_engine_spec.cursor_execute_kwargs)
+        else:
+            cursor.execute(query.executed_sql, **db_engine_spec.cursor_execute_kwargs)
+
         logging.info('Handling cursor')
         db_engine_spec.handle_cursor(cursor, query, session)
         logging.info('Fetching data: {}'.format(query.to_dict()))

@@ -16,6 +16,15 @@ export const STATUS_OPTIONS = [
   'pending',
 ];
 
+export const QUERY_STATUS_OPTIONS = [
+  ...STATUS_OPTIONS, 'stopped'
+];
+
+export const SQL_TYPE_OPTIONS = [
+  'presto',
+  'hive'
+];
+
 export const TIME_OPTIONS = [
   'now',
   '1 hour ago',

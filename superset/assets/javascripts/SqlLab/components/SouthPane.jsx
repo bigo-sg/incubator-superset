@@ -89,9 +89,7 @@ class SouthPane extends React.PureComponent {
             title={t('Query History')}
             eventKey="History"
           >
-            <div style={{ height: `${innerTabHeight}px`, overflow: 'auto' }}>
-              <QueryHistory queries={props.editorQueries} actions={props.actions} />
-            </div>
+            <QueryHistory queries={props.editorQueries} actions={props.actions} height={innerTabHeight} />
           </Tab>
           {dataPreviewTabs}
         </Tabs>

@@ -59,7 +59,7 @@ class QueryHistory extends React.PureComponent {
         let isFilterData = true;
         if (sqlTypeNotEmpty && i.sql_type !== sqlType) {
           isFilterData = false;
-        } else if (sqlTextNotEmpty && i.sql !== sqlText) {
+        } else if (sqlTextNotEmpty && !i.sql.includes(sqlText)) {
           isFilterData = false;
         } else if (statusNotEmpty && i.state !== status) {
           isFilterData = false;

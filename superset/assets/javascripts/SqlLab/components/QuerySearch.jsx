@@ -13,7 +13,10 @@ const $ = window.$ = require('jquery');
 
 const propTypes = {
   actions: PropTypes.object.isRequired,
-  height: PropTypes.number.isRequired,
+  height: PropTypes.oneOfType([
+      React.PropTypes.string.isRequired,
+      React.PropTypes.number.isRequired,
+    ]),
 };
 
 class QuerySearch extends React.PureComponent {

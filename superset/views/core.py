@@ -2417,7 +2417,6 @@ class Superset(BaseSupersetView):
             .filter_by(client_id=client_id)
             .one()
         )
-
         rejected_tables = self.rejected_datasources(
             query.sql, query.database, query.schema)
         if rejected_tables:
@@ -2440,7 +2439,7 @@ class Superset(BaseSupersetView):
         else:
             logging.info('Running a query to turn into CSV')
             sql = query.select_sql or query.executed_sql
-            df = query.database.get_df(sql, query.schema)
+            df = query.database.get_df(sql, query.schema, sql_type=query.sql_type)
             # TODO(bkyryliuk): add compression=gzip for big files.
             csv = df.to_csv(index=False, **config.get('CSV_EXPORT'))
         response = Response(csv, mimetype='text/csv')
@@ -2481,7 +2480,7 @@ class Superset(BaseSupersetView):
         else:
             logging.info('Running a query to turn into CSV')
             sql = query.select_sql or query.executed_sql
-            df = query.database.get_df(sql, query.schema)
+            df = query.database.get_df(sql, query.schema, sql_type=query.sql_type)
             # # TODO(bkyryliuk): add compression=gzip for big files.
 
         col_names = list()

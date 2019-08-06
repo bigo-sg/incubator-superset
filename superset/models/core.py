@@ -678,10 +678,10 @@ class Database(Model, AuditMixinNullable, ImportMixin):
     def get_quoter(self):
         return self.get_dialect().identifier_preparer.quote
 
-    def get_df(self, sql, schema):
+    def get_df(self, sql, schema, sql_type=None):
         sql = sql.strip().strip(';')
         eng = self.get_sqla_engine(schema=schema)
-        df = pd.read_sql(sql, eng)
+        df = pd.read_sql(sql, eng, sql_type=sql_type)
 
         def needs_conversion(df_series):
             if df_series.empty:

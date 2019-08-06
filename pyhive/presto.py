@@ -178,7 +178,7 @@ class Cursor(common.DBAPICursor):
 
         Return values are not defined.
         """
-        if(type(sql_type) == dict):
+        if(type(sql_type) == dict and 'sql_type' in sql_type):
             sql_type = sql_type['sql_type']
 
         if sql_type == "hive":

@@ -182,10 +182,8 @@ class Cursor(common.DBAPICursor):
             sql_type = sql_type['sql_type']
 
         if sql_type == "hive":
-            client_tag = "hive"
             enable_hive_syntax = "enable_hive_syntax=true"
         else:
-            client_tag = "presto"
             enable_hive_syntax = "enable_hive_syntax=false"
 
         headers = {
@@ -193,7 +191,6 @@ class Cursor(common.DBAPICursor):
             'X-Presto-Schema': self._schema,
             'X-Presto-Source': self._source,
             'X-Presto-User': self._username,
-            # 'X-Presto-Client-Tags': client_tag,
             'X-Presto-Session': enable_hive_syntax,
         }
 

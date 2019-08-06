@@ -19,6 +19,9 @@ import logging
 import requests
 from requests.auth import HTTPBasicAuth
 
+from superset import app
+import re
+
 try:  # Python 3
     import urllib.parse as urlparse
 except ImportError:  # Python 2
@@ -175,6 +178,9 @@ class Cursor(common.DBAPICursor):
 
         Return values are not defined.
         """
+        if(type(sql_type) == dict):
+            sql_type = sql_type['sql_type']
+
         if sql_type == "hive":
             client_tag = "hive"
             enable_hive_syntax = "enable_hive_syntax=true"
@@ -202,10 +208,12 @@ class Cursor(common.DBAPICursor):
             sql = operation
         else:
             sql = operation % _escaper.escape_args(parameters)
-
         sql = sql.replace("%%", "%")
-        self._reset_state()
 
+        if re.match("^select", sql[0:6].lower()) is not None and "limit " not in sql.lower():
+            sql = sql + " limit " + str(app.config.get('SQL_MAX_DOWNLOAD_ROW', 200000))
+
+        self._reset_state()
         self._state = self._STATE_RUNNING
         url = urlparse.urlunparse((
             self._protocol,

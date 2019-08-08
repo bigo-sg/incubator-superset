@@ -89,9 +89,9 @@ class SqlEditor extends React.PureComponent {
       height,
     });
 
-     if (size && !isNaN(Number(size))) {
+    if (size && !isNaN(Number(size))) {
       this.props.actions.persistEditorHeight(this.props.queryEditor, size);
-     }
+    }
   }
 
   setQueryEditorSql(sql) {
@@ -272,31 +272,18 @@ class SqlEditor extends React.PureComponent {
           height: height + 'px',
         }}
       >
-        <Row>
+        <SplitPane split="vertical" defaultSize={400} maxSize={600} style={{padding: '0 10px'}}>
           <Collapse
             in={!this.props.hideLeftBar}
           >
-            <Col
-              xs={6}
-              sm={5}
-              md={4}
-              lg={3}
-            >
-              <SqlEditorLeftBar
-                height={height}
-                queryEditor={this.props.queryEditor}
-                tables={this.props.tables}
-                actions={this.props.actions}
-              />
-            </Col>
+            <SqlEditorLeftBar
+              height={height}
+              queryEditor={this.props.queryEditor}
+              tables={this.props.tables}
+              actions={this.props.actions}
+            />
           </Collapse>
-          <Col
-            xs={this.props.hideLeftBar ? 12 : 6}
-            sm={this.props.hideLeftBar ? 12 : 7}
-            md={this.props.hideLeftBar ? 12 : 8}
-            lg={this.props.hideLeftBar ? 12 : 9}
-            style={{height: this.state.height}}
-          >
+          <div style={{height: this.state.height, padding: '0 10px'}}>
             <SplitPane
               split="horizontal"
               defaultSize={defaultNorthHeight}
@@ -327,8 +314,8 @@ class SqlEditor extends React.PureComponent {
                 />
               </div>
             </SplitPane>
-          </Col>
-        </Row>
+          </div>
+        </SplitPane>
       </div>
     );
   }

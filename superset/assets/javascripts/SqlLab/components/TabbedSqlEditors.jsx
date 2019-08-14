@@ -1,15 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { DropdownButton, MenuItem, Tab, Tabs } from 'react-bootstrap';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import {DropdownButton, MenuItem, Tab, Tabs} from 'react-bootstrap';
+import {connect} from 'react-redux';
+import {bindActionCreators} from 'redux';
 import URI from 'urijs';
 
 import * as Actions from '../actions';
 import SqlEditor from './SqlEditor';
 import CopyQueryTabUrl from './CopyQueryTabUrl';
-import { areArraysShallowEqual } from '../../reduxUtils';
-import { t } from '../../locales';
+import {areArraysShallowEqual} from '../../reduxUtils';
+import {t} from '../../locales';
 
 const propTypes = {
   actions: PropTypes.object.isRequired,
@@ -38,6 +38,7 @@ class TabbedSqlEditors extends React.PureComponent {
       hideLeftBar: false,
     };
   }
+
   componentDidMount() {
     const query = URI(window.location).search(true);
     if (query.id || query.sql || query.savedQueryId || query.sql_type) {
@@ -73,6 +74,7 @@ class TabbedSqlEditors extends React.PureComponent {
       this.popNewTab();
     }
   }
+
   componentWillReceiveProps(nextProps) {
     const nextActiveQeId = nextProps.tabHistory[nextProps.tabHistory.length - 1];
     const queriesArray = [];
@@ -82,7 +84,7 @@ class TabbedSqlEditors extends React.PureComponent {
       }
     }
     if (!areArraysShallowEqual(queriesArray, this.state.queriesArray)) {
-      this.setState({ queriesArray });
+      this.setState({queriesArray});
     }
 
     const dataPreviewQueries = [];
@@ -93,14 +95,16 @@ class TabbedSqlEditors extends React.PureComponent {
       }
     });
     if (!areArraysShallowEqual(dataPreviewQueries, this.state.dataPreviewQueries)) {
-      this.setState({ dataPreviewQueries });
+      this.setState({dataPreviewQueries});
     }
   }
+
   popNewTab() {
     queryCount++;
     // Clean the url in browser history
     window.history.replaceState({}, document.title, this.state.sqlLabUrl);
   }
+
   renameTab(qe) {
     /* eslint no-alert: 0 */
     const newTitle = prompt(t('Enter a new title for the tab'));
@@ -108,6 +112,7 @@ class TabbedSqlEditors extends React.PureComponent {
       this.props.actions.queryEditorSetTitle(qe, newTitle);
     }
   }
+
   activeQueryEditor() {
     const qeid = this.props.tabHistory[this.props.tabHistory.length - 1];
     for (let i = 0; i < this.props.queryEditors.length; i++) {
@@ -118,6 +123,7 @@ class TabbedSqlEditors extends React.PureComponent {
     }
     return null;
   }
+
   newQueryEditor() {
     queryCount++;
     const activeQueryEditor = this.activeQueryEditor();
@@ -133,19 +139,29 @@ class TabbedSqlEditors extends React.PureComponent {
     };
     this.props.actions.addQueryEditor(qe);
   }
+
   handleSelect(key) {
     if (key === 'add_tab') {
       this.newQueryEditor();
     } else {
-      this.props.actions.setActiveQueryEditor({ id: key });
+      this.props.actions.setActiveQueryEditor({id: key});
     }
   }
+
   removeQueryEditor(qe) {
     this.props.actions.removeQueryEditor(qe);
   }
-  toggleLeftBar() {
-    this.setState({ hideLeftBar: !this.state.hideLeftBar });
+
+  removeAllQueryEditor() {
+    this.props.queryEditors.map(qe => {
+      this.props.actions.removeQueryEditor(qe);
+    });
   }
+
+  toggleLeftBar() {
+    this.setState({hideLeftBar: !this.state.hideLeftBar});
+  }
+
   render() {
     const editors = this.props.queryEditors.map((qe, i) => {
       const isSelected = (qe.id === this.activeQueryEditor().id);
@@ -162,25 +178,24 @@ class TabbedSqlEditors extends React.PureComponent {
 
       const tabTitle = (
         <div>
-          <div className={'circle ' + state} /> {qe.title} {' '}
+          <div className={'circle ' + state}/>
+          {qe.title} {' '}
           <DropdownButton
             bsSize="small"
             id={'ddbtn-tab-' + i}
             title=""
           >
             <MenuItem eventKey="1" onClick={this.removeQueryEditor.bind(this, qe)}>
-              <i className="fa fa-close" /> {t('close tab')}
+              <i className="fa fa-close"/> {t('close tab')}
             </MenuItem>
             <MenuItem eventKey="2" onClick={this.renameTab.bind(this, qe)}>
-              <i className="fa fa-i-cursor" /> {t('rename tab')}
+              <i className="fa fa-i-cursor"/> {t('rename tab')}
             </MenuItem>
             {qe &&
-              <CopyQueryTabUrl queryEditor={qe} />
+            <CopyQueryTabUrl queryEditor={qe}/>
             }
-            <MenuItem eventKey="4" onClick={this.toggleLeftBar.bind(this)}>
-              <i className="fa fa-cogs" />
-              &nbsp;
-              {this.state.hideLeftBar ? t('expand tool bar') : t('hide tool bar')}
+            <MenuItem eventKey="4" onClick={this.removeAllQueryEditor.bind(this)}>
+              <i className="fa fa-minus-circle" /> {t('close all tabs')}
             </MenuItem>
           </DropdownButton>
         </div>
@@ -194,17 +209,17 @@ class TabbedSqlEditors extends React.PureComponent {
           <div className="panel panel-default">
             <div className="panel-body">
               {isSelected &&
-                <SqlEditor
-                  getHeight={this.props.getHeight}
-                  tables={this.props.tables.filter(xt => (xt.queryEditorId === qe.id))}
-                  queryEditor={qe}
-                  editorQueries={this.state.queriesArray}
-                  dataPreviewQueries={this.state.dataPreviewQueries}
-                  latestQuery={latestQuery}
-                  database={database}
-                  actions={this.props.actions}
-                  hideLeftBar={this.state.hideLeftBar}
-                />
+              <SqlEditor
+                getHeight={this.props.getHeight}
+                tables={this.props.tables.filter(xt => (xt.queryEditorId === qe.id))}
+                queryEditor={qe}
+                editorQueries={this.state.queriesArray}
+                dataPreviewQueries={this.state.dataPreviewQueries}
+                latestQuery={latestQuery}
+                database={database}
+                actions={this.props.actions}
+                hideLeftBar={this.state.hideLeftBar}
+              />
               }
             </div>
           </div>
@@ -221,7 +236,7 @@ class TabbedSqlEditors extends React.PureComponent {
         <Tab
           title={
             <div>
-              <i className="fa fa-plus-circle" />&nbsp;
+              <i className="fa fa-plus-circle"/>&nbsp;
             </div>}
           eventKey="add_tab"
         />
@@ -229,6 +244,7 @@ class TabbedSqlEditors extends React.PureComponent {
     );
   }
 }
+
 TabbedSqlEditors.propTypes = propTypes;
 TabbedSqlEditors.defaultProps = defaultProps;
 
@@ -242,11 +258,12 @@ function mapStateToProps(state) {
     defaultDbId: state.defaultDbId,
   };
 }
+
 function mapDispatchToProps(dispatch) {
   return {
     actions: bindActionCreators(Actions, dispatch),
   };
 }
 
-export { TabbedSqlEditors };
+export {TabbedSqlEditors};
 export default connect(mapStateToProps, mapDispatchToProps)(TabbedSqlEditors);

@@ -31,11 +31,12 @@ export default function VirtualizedRendererWrap(renderer) {
       onClick: () => selectValue(option),
       onMouseEnter: () => focusOption(option),
     };
+    const defaultStyle = {overflow: 'hidden'};
     return (
       <div
         className={className.join(' ')}
         key={key}
-        style={Object.assign(option.style || {}, style)}
+        style={Object.assign(option.style || {}, style, defaultStyle)}
         title={option.title}
         {...events}
       >

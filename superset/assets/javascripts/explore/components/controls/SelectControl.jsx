@@ -6,6 +6,7 @@ import ControlHeader from '../ControlHeader';
 import { t } from '../../../locales';
 import VirtualizedRendererWrap from '../../../components/VirtualizedRendererWrap';
 import OnPasteSelect from '../../../components/OnPasteSelect';
+import SelectColumnOption from "../../../components/SelectColumnOption";
 
 const propTypes = {
   choices: PropTypes.array,
@@ -38,8 +39,8 @@ const defaultProps = {
   onChange: () => {},
   onFocus: () => {},
   showHeader: true,
-  optionRenderer: opt => opt.label,
-  valueRenderer: opt => opt.label,
+  optionRenderer: opt => <SelectColumnOption column={opt.label} />,
+  valueRenderer: opt => <SelectColumnOption column={opt.label} />,
   valueKey: 'value',
 };
 

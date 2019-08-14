@@ -152,6 +152,12 @@ class TabbedSqlEditors extends React.PureComponent {
     this.props.actions.removeQueryEditor(qe);
   }
 
+  removeAllQueryEditor() {
+    this.props.queryEditors.map(qe => {
+      this.props.actions.removeQueryEditor(qe);
+    });
+  }
+
   toggleLeftBar() {
     this.setState({hideLeftBar: !this.state.hideLeftBar});
   }
@@ -188,11 +194,9 @@ class TabbedSqlEditors extends React.PureComponent {
             {qe &&
             <CopyQueryTabUrl queryEditor={qe}/>
             }
-            {/*<MenuItem eventKey="4" onClick={this.toggleLeftBar.bind(this)}>*/}
-            {/*  <i className="fa fa-cogs" />*/}
-            {/*  &nbsp;*/}
-            {/*  {this.state.hideLeftBar ? t('expand tool bar') : t('hide tool bar')}*/}
-            {/*</MenuItem>*/}
+            <MenuItem eventKey="4" onClick={this.removeAllQueryEditor.bind(this)}>
+              <i className="fa fa-minus-circle" /> {t('close all tabs')}
+            </MenuItem>
           </DropdownButton>
         </div>
       );

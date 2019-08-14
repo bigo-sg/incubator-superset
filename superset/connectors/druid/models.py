@@ -305,8 +305,8 @@ class DruidColumn(Model, BaseColumn):
             metrics[name] = DruidMetric(
                 metric_name=name,
                 verbose_name='COUNT({})'.format(column_name_new),
-                metric_type='count',
-                json=json.dumps({'type': 'count', 'name': name, 'fieldName': self.column_name}),
+                metric_type='longSum',
+                json=json.dumps({'type': 'longSum', 'name': name, 'fieldName': self.column_name}),
             )
 
         # Somehow we need to reassign this for UDAFs
@@ -317,7 +317,6 @@ class DruidColumn(Model, BaseColumn):
 
         if self.sum and self.is_num and is_sum:
             mt = corrected_type.lower() + 'Sum'
-            # name = 'sum_' + column_name_new
             name = self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
@@ -329,7 +328,7 @@ class DruidColumn(Model, BaseColumn):
 
         if self.min and self.is_num and is_min:
             mt = corrected_type.lower() + 'Min'
-            name = 'min_' + self.column_name
+            name = self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
                 metric_type='min',
@@ -339,7 +338,7 @@ class DruidColumn(Model, BaseColumn):
             )
         if self.max and self.is_num and is_max:
             mt = corrected_type.lower() + 'Max'
-            name = 'max_' + self.column_name
+            name = self.column_name
             metrics[name] = DruidMetric(
                 metric_name=name,
                 metric_type='max',
@@ -349,7 +348,6 @@ class DruidColumn(Model, BaseColumn):
             )
         if self.count_distinct:
             name = self.column_name
-            # name = 'count_distinct__' + self.column_name
             if self.type == 'hyperUnique' or self.type == 'thetaSketch':
                 metrics[name] = DruidMetric(
                     metric_name=name,
@@ -1211,6 +1209,11 @@ class DruidDatasource(Model, BaseDatasource):
             metrics,
             metrics_dict)
 
+        metric_aggs = list()
+        for metric in metrics_dict:
+            metric_aggs.append(metric)
+        aggs = DruidDatasource.get_aggregations(self, metric_aggs)
+
         to_generate_agg = list()
         for key in post_aggs:
             pgg = post_aggs[key]
@@ -1227,6 +1230,12 @@ class DruidDatasource(Model, BaseDatasource):
                 if aggName in generate_aggs:
                     continue
                 new_agg = {}
+
+                if aggName in aggs:
+                    new_agg = aggs[aggName]
+                    generate_aggs[aggName] = new_agg
+                    continue
+
                 new_agg['fieldName'] = agg['fieldName']
                 new_agg['name'] = agg['name']
                 new_agg['type'] = agg['type']

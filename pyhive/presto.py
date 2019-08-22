@@ -205,7 +205,7 @@ class Cursor(common.DBAPICursor):
             sql = operation
         else:
             sql = operation % _escaper.escape_args(parameters)
-        sql = sql.replace("%%", "%")
+        sql = sql.replace("%%", "%").strip()
 
         if re.match("^select", sql[0:6].lower()) is not None and "limit " not in sql.lower():
             sql = sql + " limit " + str(app.config.get('SQL_MAX_DOWNLOAD_ROW', 200000))

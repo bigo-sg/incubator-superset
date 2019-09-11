@@ -27,7 +27,6 @@ try:  # Python 3
 except ImportError:  # Python 2
     import urlparse
 
-
 # PEP 249 module globals
 apilevel = '2.0'
 threadsafety = 2  # Threads may share the module and connections.
@@ -163,7 +162,7 @@ class Cursor(common.DBAPICursor):
         # Sleep until we're done or we got the columns
         self._fetch_while(
             lambda: self._columns is None and
-            self._state not in (self._STATE_NONE, self._STATE_FINISHED)
+                    self._state not in (self._STATE_NONE, self._STATE_FINISHED)
         )
         if self._columns is None:
             return None
@@ -178,7 +177,7 @@ class Cursor(common.DBAPICursor):
 
         Return values are not defined.
         """
-        if(type(sql_type) == dict and 'sql_type' in sql_type):
+        if (type(sql_type) == dict and 'sql_type' in sql_type):
             sql_type = sql_type['sql_type']
 
         if sql_type == "hive":
@@ -291,11 +290,38 @@ class Cursor(common.DBAPICursor):
             assert self._columns
             new_data = response_json['data']
             self._decode_binary(new_data)
+            self._decode_multi_struct(new_data, self._columns)
             self._data += map(tuple, new_data)
         if 'nextUri' not in response_json:
             self._state = self._STATE_FINISHED
         if 'error' in response_json:
             raise DatabaseError(response_json['error'])
+
+    def _decode_multi_struct(self, rows, columns, dictToStr=True):
+        import json
+        for i, col in enumerate(columns):
+            if "typeSignature" in col and \
+                    "rawType" in col["typeSignature"] and \
+                    (col["typeSignature"]["rawType"] == "map" or col["typeSignature"]["rawType"] == "array"):
+                for rowid, row in enumerate(rows):
+                    if dictToStr:
+                        row[i] = json.dumps(row[i])
+
+            if "row(" in col["type"] and "typeSignature" in col and \
+                    "literalArguments" in col["typeSignature"] and \
+                    "rawType" in col["typeSignature"]:
+                if col["typeSignature"]["rawType"] == "row":
+                    for rowid, row in enumerate(rows):
+                        if type(row[i]) is list and type(row[i]) is list \
+                                and len(row[i]) == len(col["typeSignature"]["literalArguments"]):
+                            tmprow = row[i]
+                            tmpdict = dict()
+                            for rowidx, rowvalue in enumerate(col["typeSignature"]["literalArguments"]):
+                                tmpdict[rowvalue] = tmprow[rowidx]
+                            if dictToStr:
+                                row[i] = json.dumps(tmpdict)
+                            else:
+                                row[i] = tmpdict
 
 
 #

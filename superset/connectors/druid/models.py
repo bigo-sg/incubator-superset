@@ -214,7 +214,8 @@ class DruidCluster(Model, AuditMixinNullable, ImportMixin):
                     if datatype == 'STRING':
                         col_obj.groupby = True
                         col_obj.filterable = True
-                    if datatype == 'hyperUnique' or datatype == 'thetaSketch' or datatype == 'HLLSketch':
+                    if datatype == 'hyperUnique' or datatype == 'thetaSketch' or datatype == 'HLLSketch' \
+                            or datatype == 'bitmapCollector' or datatype == 'accurateCardinality':
                         col_obj.count_distinct = True
                     # Allow sum/min/max for long or double
                     if datatype == 'LONG' or datatype == 'DOUBLE':
@@ -368,6 +369,18 @@ class DruidColumn(Model, BaseColumn):
                         'type': 'HLLSketchMerge',
                         'name': name,
                         'fieldName': self.column_name,
+                    }),
+                )
+            elif self.type == 'bitmapCollector' or self.type == 'accurateCardinality':
+                metrics[name] = DruidMetric(
+                    metric_name=name,
+                    verbose_name='COUNT(ACC DISTINCT {})'.format(self.column_name),
+                    metric_type='accurateCardinality',
+                    json=json.dumps({
+                        'type': 'accurateCardinality',
+                        'name': name,
+                        'field': self.column_name,
+                        'nameSpace': 'null',
                     }),
                 )
             else:
@@ -1243,6 +1256,12 @@ class DruidDatasource(Model, BaseDatasource):
                     new_agg['type'] = 'HLLSketchMerge'
                 elif re.match(".*_theta$", aggName) is not None:
                     new_agg['type'] = 'thetaSketch'
+                elif re.match(".*_acc$", aggName) is not None:
+                    new_agg = {}
+                    new_agg['field'] = agg['fieldName']
+                    new_agg['name'] = agg['name']
+                    new_agg['type'] = 'accurateCardinality'
+                    new_agg['nameSpace'] = 'null'
                 else:
                     if new_agg['type'] == 'fieldAccess' or new_agg['type'] == 'finalizingFieldAccess':
                         new_agg['type'] = 'doubleSum'
